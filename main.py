@@ -1,4 +1,5 @@
 import inspect
+import atexit
 from pathlib import Path
 from keras.models import Sequential, load_model
 from keras.layers import Dense
@@ -31,6 +32,15 @@ def validate_signature(func):
         assert arg != inspect._empty, 'Arguments must be typed'
         assert issubclass(arg.annotation, NNDT), 'Arguments must be NNDTs'
 
+
+class NNPointer:
+    def __init__(self, func):
+        atexit.register(self.shutdown)
+
+    def shutdown(self):
+        "Save the NN to file!"
+        
+
 def nn(func):
     """
     Returns a function with an associated NN whose input layer consists of as
@@ -40,6 +50,8 @@ def nn(func):
     contains 2 input nodes.
     """
     validate_signature(func)
+
+    func.__return_type__ = func.__annotations__['return']
 
     __pycache__ = Path('__pycache__')
     __pycache__.mkdir(exist_ok=True)
@@ -67,7 +79,6 @@ def nn(func):
 
         model.save(nn_file)
         func.__model__ = model
-        func.__return_type__ = func.__annotations__['return']
 
     def closure(*args):
         result_accurate = func(*args)
