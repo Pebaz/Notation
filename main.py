@@ -23,6 +23,9 @@ from keras.layers import Dense
 
 def validate_signature(func):
     sig = inspect.signature(func)
+    assert issubclass(sig.return_annotation, NNDT), (
+        'Must have return type of NNDT'
+    )
     for argument in sig.parameters:
         arg = sig.parameters[argument]
         assert arg != inspect._empty, 'Arguments must be typed'
@@ -46,34 +49,37 @@ def nn(func):
     if nn_file.exists():
         func.__model__ = load_model(nn_file)
     else:
-        num_input_nodes = NNDT.length_of(func.__annotations__.values())
+        arg_types = [
+            val for key, val in func.__annotations__.items()
+            if key != 'return'
+        ]
+        print('->', func.__annotations__)
+        num_input_nodes = NNDT.length_of(arg_types)
 
         model = Sequential([Dense(1, input_shape=(num_input_nodes,))])
         model.compile(loss='mse', optimizer='adam')
-        model.save(nn_file)
+
+        import numpy as np
+        data_input = np.random.normal(size=4)  # 1000000
+        data_label = -(data_input)
+
         model.fit(data_input, data_label)
 
+        model.save(nn_file)
         func.__model__ = model
+        func.__return_type__ = func.__annotations__['return']
 
     def closure(*args):
-        nonlocal nn_file
-
-
-
-
         result_accurate = func(*args)
         args = [[i] for i in args]
-        result_predict = func.__model__.predict(args)
+        result_predict = func.__return_type__.from_(
+            func.__model__.predict(args)
+        )
         func.__model__.fit(*args, [result_accurate])
-
-
-
-
-        func.__model__.save(nn_file)
 
         # if it matches, stop using the stored function!
 
-        print(result_accurate, result_predict[0])
+        print(result_accurate, result_predict)
 
         return result_accurate
 
@@ -83,26 +89,32 @@ class NNDT:
     "Neural Network-Aware Data Type"
     SHAPE = 1
 
+    def __init__(self, value):
+        self.value = value
+
     def __len__(self):
         return self.SHAPE
+
+    @staticmethod
+    def from_(value):
+        return None
 
     @staticmethod
     def length_of(*args):
         return sum(len(i) for i in args)
 
 class Int(NNDT):
-    def __init__(self, value):
-        self.value = value
-        self.shape = 1
+    @staticmethod
+    def from_(value):
+        return int(value)
 
 class String(NNDT):
     SHAPE = 255
-
     def __init__(self, value):
-        self.value = value
+        assert len(value) < self.SHAPE, f'String len capped at {self.SHAPE}'
 
 @nn
-def negate(number: Int):
+def negate(number: Int) -> Int:
     return -number
 
 print(negate(123))
