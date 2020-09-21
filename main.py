@@ -58,7 +58,7 @@ class NNFunc:
 
             self.train()
 
-    def train(self, enthusiasm=100000):
+    def train(self, enthusiasm=5):
         """
         Automatically trains the NN using random inputs coupled with the correct
         return value obtained from the function.
@@ -153,7 +153,7 @@ class NNDT:
         return self.SHAPE
 
     def to(self):
-        raise NotImplemented()
+        return self.value
 
     @staticmethod
     def length_of(*args):
@@ -172,7 +172,7 @@ class NNDT:
 
 class Int(NNDT):
     def to(self):
-        "Return an int"
+        "Return an int and round out as much innacuracy as possible."
         return int(self.value)
 
     @staticmethod
@@ -190,40 +190,62 @@ class Int(NNDT):
 
 class String(NNDT):
     SHAPE = 255
+    UNICODES = ''.join(
+        chr(i)
+        for i in range(32, 0x110000)
+        if chr(i).isprintable()
+    )
 
     def __init__(self, value):
-        assert len(value) < self.SHAPE, f'String len capped at {self.SHAPE}'
-    
-    def to(self):
-        "Return a str"
+        "Create new string, padding it with zeroes if shorter than SHAPE."
+        assert len(value) <= self.SHAPE, f'String len capped at {self.SHAPE}'
+        self.value = value + '\0' * (self.SHAPE - len(value))
+
+    def as_layer(self):
+        return [ord(c) for c in self.value]
+
+    def from_layer(layer):
+        return String(''.join(chr(c) for c in layer))
 
     @classmethod
-    def random(cls):
-        length = random.randint(0, cls.SHAPE)
-        return String()
+    def random(cls, length_choice=None):
+        length = length_choice or random.randint(0, cls.SHAPE)
+        random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
+        return String(''.join(random_str_gen))
+
+
+# @nn
+# def negate(number: Int) -> Int:
+#     return -number
+
+
+# print()
+# print('Result  (-123):', negate(123))
+# print('Predict (-124):', negate.call_predicted(124))
+# print()
+# print('--------------------')
+# # negate.train()
+
+
+
+# @nn
+# def add(a: Int, b: Int) -> Int:
+#     return a + b
+
+# print()
+# print('Result  (300):', add(100, 200))
+# print('Predict (15):', add.call_predicted(10, 5))
+# print()
+# print('--------------------')
 
 
 @nn
-def negate(number: Int) -> Int:
-    return -number
-
-
-print()
-print('Result  (-123):', negate(123))
-print('Predict (-124):', negate.call_predicted(124))
-print()
-print('--------------------')
-# negate.train()
-
-
-
-@nn
-def add(a: Int, b: Int) -> Int:
-    return a + b
+def first_char(a: String) -> String:
+    return a[0]
 
 print()
-print('Result  (300):', add(100, 200))
-print('Predict (15):', add.call_predicted(10, 5))
+print('Result  ("abc"):', first_char("abc"))
+print('Predict ("bca"):', first_char.call_predicted("bca"))
 print()
 print('--------------------')
 
