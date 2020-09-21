@@ -33,12 +33,74 @@ def validate_signature(func):
         assert issubclass(arg.annotation, NNDT), 'Arguments must be NNDTs'
 
 
-class NNPointer:
+class NNFunc:
     def __init__(self, func):
-        atexit.register(self.shutdown)
+        validate_signature(func)
 
-    def shutdown(self):
+        self.func = func
+        self.result_predict = None
+
+        self.__return_type__ = func.__annotations__['return']
+
+        self.__pycache__ = Path('__pycache__')
+
+        self.nn_file = self.__pycache__ / f'{func.__name__}'
+
+        self.initialize_function()
+
+        atexit.register(self.__cleanup__)
+
+    def initialize_function(self):
+        if self.nn_file.exists():
+            self.__model__ = load_model(self.nn_file)
+        else:
+            self.__pycache__.mkdir(exist_ok=True)
+
+            arg_types = [
+                val for key, val in func.__annotations__.items()
+                if key != 'return'
+            ]
+
+            num_input_nodes = NNDT.length_of(arg_types)
+
+            model = Sequential([Dense(1, input_shape=(num_input_nodes,))])
+            model.compile(loss='mse', optimizer='adam')
+
+            # import numpy as np
+            # data_input = np.random.normal(size=4)  # 1000000
+            # data_label = -(data_input)
+
+            model.fit(data_input, data_label)
+
+            self.__model__ = model
+
+    def __cleanup__(self):
         "Save the NN to file!"
+        self.__model__.save(self.nn_file)
+
+    def __call__(self, *args):
+        "Call the function and the NN, returning the most accurate value."
+        result_accurate = self.func(*args)
+        args = [[i] for i in args]
+        self.result_predict = self.__return_type__.from_(
+            self.__model__.predict(args)
+        )
+        self.__model__.fit(*args, [result_accurate])
+
+        # if it matches, stop using the stored function!
+
+        #print(result_accurate, result_predict)
+
+        return result_accurate
+
+    def call_raw(self, *args, **kwargs):
+        "Bypass NN entirely."
+        return self.func(*args, **kwargs)
+
+    def call_predicted(self, *args):
+        "Ensure use of NN's prediction."
+        self(*args)
+        return self.result_predict
         
 
 def nn(func):
@@ -124,8 +186,10 @@ class String(NNDT):
     def __init__(self, value):
         assert len(value) < self.SHAPE, f'String len capped at {self.SHAPE}'
 
-@nn
+@NNFunc
 def negate(number: Int) -> Int:
     return -number
 
-print(negate(123))
+print()
+print('Result:', negate(123))
+print()
