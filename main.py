@@ -19,7 +19,6 @@ class NNFunc:
         self.use_prediction_only = False
 
         self.func = func
-        self.result_predict = None
 
         self.__return_type__ = func.__annotations__['return']
 
@@ -107,18 +106,19 @@ class NNFunc:
 
         result_accurate = self.func(*args)
 
-        if not self.use_prediction_only:
-            input_values = self.signature_as_layer(args)
-            prediction = self.__model__.predict(input_values)
-            nndt_prediction = self.__return_type__.from_layer(prediction[0])
-            self.result_predict = nndt_prediction.to()
-            nndt_return_value = self.__return_type__(result_accurate)
-            
-            self.__model__.fit(input_values, [nndt_return_value.as_layer()])
+        input_values = self.signature_as_layer(args)
+        prediction = self.__model__.predict(input_values)
+        nndt_prediction = self.__return_type__.from_layer(prediction[0])
+        result_predict = nndt_prediction.to()
+        nndt_return_value = self.__return_type__(result_accurate)
 
-            # If it matches, stop using the stored function!
-            if result_accurate == self.result_predict:
-                self.certify()
+        self.__model__.fit(input_values, [nndt_return_value.as_layer()])
+
+        # If it matches, stop using the stored function!
+        if result_accurate == result_predict:
+            self.certify()
+        elif self.use_prediction_only:
+            return result_predict
 
         return result_accurate
 
@@ -132,9 +132,12 @@ class NNFunc:
 
     def call_predicted(self, *args):
         "Ensure use of NN's prediction."
-        self(*args)
-        return self.result_predict
-        
+        tmp = self.use_prediction_only
+        self.use_prediction_only = True
+        result = self(*args)
+        self.use_prediction_only = tmp
+        return result
+
 
 nn = NNFunc
 
