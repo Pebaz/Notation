@@ -96,19 +96,25 @@ class NNFunc:
         "Save the NN to file!"
         self.__model__.save(self.nn_file)
 
+    def signature_as_layer(self, args):
+        marshalled_values = []
+        for arg, nndt_type in zip(args, self.arg_types):
+            marshalled_values.extend(nndt_type(arg).as_layer())
+        return [marshalled_values]
+
     def __call__(self, *args):
         "Call the function and the NN, returning the most accurate value."
 
         result_accurate = self.func(*args)
 
         if not self.use_prediction_only:
-            args = [[i] for i in args]
-
-            self.result_predict = self.__return_type__.from_layer(
-                self.__model__.predict(args)[0]
-            ).to()
-
-            self.__model__.fit(*args, [result_accurate])
+            input_values = self.signature_as_layer(args)
+            prediction = self.__model__.predict(input_values)
+            nndt_prediction = self.__return_type__.from_layer(prediction[0])
+            self.result_predict = nndt_prediction.to()
+            nndt_return_value = self.__return_type__(result_accurate)
+            
+            self.__model__.fit(input_values, [nndt_return_value.as_layer()])
 
             # If it matches, stop using the stored function!
             if result_accurate == self.result_predict:
@@ -201,9 +207,21 @@ def negate(number: Int) -> Int:
 
 print()
 print('Result  :', negate(123))
-print('Predict :', negate.call_predicted(123))
+print('Predict :', negate.call_predicted(124))
 print()
 print('--------------------')
 # negate.train()
+
+
+
+@nn
+def add(a: Int, b: Int) -> Int:
+    return a + b
+
+print()
+print('Result  :', add(100, 200))
+print('Predict :', add.call_predicted(10, 5))
+print()
+print('--------------------')
 
 #import ipdb; ipdb.set_trace()
