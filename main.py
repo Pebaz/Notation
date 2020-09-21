@@ -64,10 +64,6 @@ class NNFunc:
         Automatically trains the NN using random inputs coupled with the correct
         return value obtained from the function.
         """
-        # import numpy as np
-        # data_input = np.random.normal(size=4)  # 1000000
-        # data_label = -(data_input)
-        # model.fit(data_input, data_label)
 
         data_input = []
         for _ in range(enthusiasm):
@@ -76,20 +72,32 @@ class NNFunc:
                 layer.extend(nndt_type.random().as_layer())
             data_input.append(layer)
 
-
+        layers_as_signatures = [
+            self.layer_as_signature(traning_input_layer)
+            for traning_input_layer in data_input
+        ]
+        
+        layers_as_values = [
+            [nndt.value for nndt in layer] for layer in layers_as_signatures
+        ]
 
         data_label = [
-            [self.call_raw(*i)] for i in data_input
+            self.call_raw(*value_layer) for value_layer in layers_as_values
         ]
+
+        self.__model__.fit(data_input, data_label)
 
     def layer_as_signature(self, nodes):
         signature = []
         ptr = 0
+        
         for nndt_type in self.arg_types:
             node_slice = nodes[ptr:ptr + nndt_type.SHAPE]
             instance = nndt_type.from_layer(node_slice)
             signature.append(instance)
             ptr += nndt_type.SHAPE
+
+        return signature
 
     def __cleanup__(self):
         "Save the NN to file!"
@@ -143,6 +151,10 @@ class NNDT:
     def as_layer(self):
         raise NotImplemented()
 
+    @staticmethod
+    def from_layer(layer):
+        raise NotImplemented()
+
 
 class Int(NNDT):
     def to(value):
@@ -154,6 +166,11 @@ class Int(NNDT):
 
     def as_layer(self):
         return [self.value]
+
+    @staticmethod
+    def from_layer(layer):
+        (layer_value,) = layer
+        return Int(layer_value)
 
 
 class String(NNDT):
