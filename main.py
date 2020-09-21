@@ -46,21 +46,20 @@ class NNFunc:
         else:
             self.__pycache__.mkdir(exist_ok=True)
 
-            arg_types = [
+            self.arg_types = [
                 val for key, val in self.func.__annotations__.items()
                 if key != 'return'
             ]
 
-            num_input_nodes = NNDT.length_of(arg_types)
+            num_input_nodes = NNDT.length_of(self.arg_types)
 
-            model = Sequential([Dense(1, input_shape=(num_input_nodes,))])
-            model.compile(loss='mse', optimizer='adam')
-
-            self.__model__ = model
+            self.__model__ = Sequential()
+            self.__model__.add(Dense(1, input_shape=(num_input_nodes,)))
+            self.__model__.compile(loss='mse', optimizer='adam')
 
             self.train()
 
-    def train(self):
+    def train(self, enthusiasm=1000):
         """
         Automatically trains the NN using random inputs coupled with the correct
         return value obtained from the function.
@@ -69,6 +68,28 @@ class NNFunc:
         # data_input = np.random.normal(size=4)  # 1000000
         # data_label = -(data_input)
         # model.fit(data_input, data_label)
+
+        data_input = []
+        for _ in range(enthusiasm):
+            layer = []
+            for nndt_type in self.arg_types:
+                layer.extend(nndt_type.random().as_layer())
+            data_input.append(layer)
+
+
+
+        data_label = [
+            [self.call_raw(*i)] for i in data_input
+        ]
+
+    def layer_as_signature(self, nodes):
+        signature = []
+        ptr = 0
+        for nndt_type in self.arg_types:
+            node_slice = nodes[ptr:ptr + nndt_type.SHAPE]
+            instance = nndt_type.from_layer(node_slice)
+            signature.append(instance)
+            ptr += nndt_type.SHAPE
 
     def __cleanup__(self):
         "Save the NN to file!"
@@ -116,6 +137,12 @@ class NNDT:
     def length_of(*args):
         return sum(len(i) for i in args)
 
+    def __str__(self):
+        return str(self.value)
+
+    def as_layer(self):
+        raise NotImplemented()
+
 
 class Int(NNDT):
     def to(value):
@@ -124,6 +151,9 @@ class Int(NNDT):
     @staticmethod
     def random():
         return Int(random.randint(-2147483648, 2147483647))
+
+    def as_layer(self):
+        return [self.value]
 
 
 class String(NNDT):
@@ -150,3 +180,5 @@ print()
 print('Result  :', negate(123))
 print('Predict :', negate.call_predicted(123))
 print()
+print(Int.random())
+print('--------------------')
