@@ -16,6 +16,7 @@ class NNFunc:
     """
     def __init__(self, func):
         self.validate_signature(func)
+        self.use_prediction_only = False
 
         self.func = func
         self.result_predict = None
@@ -41,16 +42,15 @@ class NNFunc:
             assert issubclass(arg.annotation, NNDT), 'Arguments must be NNDTs'
 
     def initialize_function(self):
+        self.arg_types = [
+            val for key, val in self.func.__annotations__.items()
+            if key != 'return'
+        ]
+
         if self.nn_file.exists():
             self.__model__ = load_model(self.nn_file)
         else:
             self.__pycache__.mkdir(exist_ok=True)
-
-            self.arg_types = [
-                val for key, val in self.func.__annotations__.items()
-                if key != 'return'
-            ]
-
             num_input_nodes = NNDT.length_of(self.arg_types)
 
             self.__model__ = Sequential()
@@ -59,7 +59,7 @@ class NNFunc:
 
             self.train()
 
-    def train(self, enthusiasm=1000):
+    def train(self, enthusiasm=100000):
         """
         Automatically trains the NN using random inputs coupled with the correct
         return value obtained from the function.
@@ -72,18 +72,11 @@ class NNFunc:
                 layer.extend(nndt_type.random().as_layer())
             data_input.append(layer)
 
-        layers_as_signatures = [
-            self.layer_as_signature(traning_input_layer)
-            for traning_input_layer in data_input
-        ]
-        
-        layers_as_values = [
-            [nndt.value for nndt in layer] for layer in layers_as_signatures
-        ]
-
-        data_label = [
-            self.call_raw(*value_layer) for value_layer in layers_as_values
-        ]
+        data_label = []
+        for training_layer in data_input:
+            signature = self.layer_as_signature(training_layer)
+            marshalled_values = [nndt_inst.value for nndt_inst in signature]
+            data_label.append(self.call_raw(*marshalled_values))
 
         self.__model__.fit(data_input, data_label)
 
@@ -101,22 +94,31 @@ class NNFunc:
 
     def __cleanup__(self):
         "Save the NN to file!"
-        #self.__model__.save(self.nn_file)
+        self.__model__.save(self.nn_file)
 
     def __call__(self, *args):
         "Call the function and the NN, returning the most accurate value."
+
         result_accurate = self.func(*args)
-        args = [[i] for i in args]
-        self.result_predict = self.__return_type__(
-            self.__model__.predict(args)
-        )
-        self.__model__.fit(*args, [result_accurate])
 
-        # if it matches, stop using the stored function!
+        if not self.use_prediction_only:
+            args = [[i] for i in args]
 
-        #print(result_accurate, result_predict)
+            self.result_predict = self.__return_type__.from_layer(
+                self.__model__.predict(args)[0]
+            ).to()
+
+            self.__model__.fit(*args, [result_accurate])
+
+            # If it matches, stop using the stored function!
+            if result_accurate == self.result_predict:
+                self.certify()
 
         return result_accurate
+
+    def certify(self):
+        # TODO(pebaz): Load this value from a text file called: func.cerfity
+        self.use_prediction_only = True
 
     def call_raw(self, *args, **kwargs):
         "Bypass NN entirely."
@@ -127,6 +129,9 @@ class NNFunc:
         self(*args)
         return self.result_predict
         
+
+nn = NNFunc
+
 
 class NNDT:
     "Neural Network-Aware Data Type"
@@ -157,8 +162,9 @@ class NNDT:
 
 
 class Int(NNDT):
-    def to(value):
-        return int(value)
+    def to(self):
+        "Return an int"
+        return int(self.value)
 
     @staticmethod
     def random():
@@ -180,7 +186,7 @@ class String(NNDT):
         assert len(value) < self.SHAPE, f'String len capped at {self.SHAPE}'
     
     def to(self):
-        'Return a string'
+        "Return a str"
 
     @classmethod
     def random(cls):
@@ -188,7 +194,7 @@ class String(NNDT):
         return String()
 
 
-@NNFunc
+@nn
 def negate(number: Int) -> Int:
     return -number
 
@@ -197,5 +203,7 @@ print()
 print('Result  :', negate(123))
 print('Predict :', negate.call_predicted(123))
 print()
-print(Int.random())
 print('--------------------')
+# negate.train()
+
+#import ipdb; ipdb.set_trace()
