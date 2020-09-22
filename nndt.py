@@ -41,9 +41,9 @@ class NNDT(metaclass=NNDTType):
         self.value = value
 
     def __str__(self):
-        return f'<{self.__class__.__name__}[{self.SHAPE}] {self.value}>'
+        return f'<{self.__class__.__name__}[{self.SHAPE}] {repr(self.value)}>'
 
-class String(metaclass=NNDTType):
+class String(NNDT):
     pass
 
 print(5, NNDT)
@@ -51,4 +51,4 @@ print(6, NNDT(3))
 print(7, NNDT[5])
 print(8, NNDT[3](100))
 print(9, String[100])
-print(10, String[100]())
+print(10, String[100]('Foo'))
