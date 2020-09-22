@@ -1,6 +1,3 @@
-"""
-"""
-
 class _VariableLength:
     "Mixin class to ensure that staticly sized classes don't get indexed."
 
@@ -8,10 +5,8 @@ class _VariableLength:
         "Length is equal to shape plus the shape of all contained values."
         return self.SHAPE + sum(len(v) for v in self.value)
 
-
 class NNDTException(Exception):
     "Base Exception for NNDT library."
-
 
 class NNDTIndexException(NNDTException):
     def __init__(self, class_, key):
@@ -23,7 +18,6 @@ class NNDTIndexException(NNDTException):
             f'{self.class_.__name__} has a static SHAPE of {self.class_.SHAPE}, '
             f'cannot be set to {self.key}'
         )
-
 
 class NNDTType(type):
     """
@@ -61,9 +55,7 @@ class NNDTType(type):
     def __str__(self):
         return f'<{self.__name__}[{self.SHAPE}]>'
 
-
 class NNDT(metaclass=NNDTType):
-    "Neural Network-Aware Data Type"
     SHAPE = 1
 
     def __init__(self, value):
@@ -72,72 +64,77 @@ class NNDT(metaclass=NNDTType):
     def __str__(self):
         return f'<{self.__class__.__name__}[{self.SHAPE}] {repr(self.value)}>'
 
-    def __len__(self):
-        return self.SHAPE
-
-    def to(self):
-        return self.value
-
-    @staticmethod
-    def length_of(*args):
-        return sum(len(i) for i in args)
-
-    def as_layer(self):
-        pass
-
-    @staticmethod
-    def from_layer(layer):
-        pass
-
-
 class Int(NNDT):
-    """
-    Integer class of shape 1.
-    Supports numbers from -2147483648 to 2147483647.
-    """
-    def to(self):
-        "Return an int and round out as much innacuracy as possible."
-        return int(self.value)
-
-    @staticmethod
-    def random():
-        return Int(random.randint(-2147483648, 2147483647))
-
-    def as_layer(self):
-        return [self.value]
-
-    @staticmethod
-    def from_layer(layer):
-        (layer_value,) = layer
-        return Int(layer_value)
-
+    pass
 
 class String(NNDT, _VariableLength):
+    pass
+
+
+
+print(5, NNDT)
+print(6, NNDT(3))
+try:
+    print(7, NNDT[5])
+except NNDTException as e:
+    print(7, e)
+try:
+    print(8, Int[3](100))
+except NNDTException as e:
+    print(8, e)
+print(9, String[100])
+print(10, String[100]('Foo'))
+print(11, Int(11))
+
+
+
+
+
+
+'''
+
+
+class Struct(NNDT, _VariableLength):
+    "Car = Struct[Int, Float, String[10], Array[3], Struct[Int, Int, Int]]"
+
+# DATA CLASSES https://docs.python.org/3/library/dataclasses.html
+
+class NNDTStruct:
     """
-    String class of shape 255.
-    Can be customized to have any length using subscript: String[10]
-    Value inputs shorter than SHAPE get padded with `\0`.
+    Go and find each field that doesn't start with __ and then pack it's type
+    into a struct automatically. Marshalling and unmarshalling the fields work
+    as expected for each inner type.
     """
-    SHAPE = 255
-    UNICODES = ''.join(
-        chr(i)
-        for i in range(32, 0x110000)
-        if chr(i).isprintable()
-    )
 
-    def __init__(self, value):
-        "Create new string, padding it with zeroes if shorter than SHAPE."
-        assert len(value) <= self.SHAPE, f'String len capped at {self.SHAPE}'
-        self.value = value + '\0' * (self.SHAPE - len(value))
+class Color(NNDTStruct):
+    Red: Float
+    Green: Float
+    Blue: Float
 
-    def as_layer(self):
-        return [ord(c) for c in self.value]
+class MyUserType(NNDTStruct):
+    NumWheels = Int
+    NumDoors = Int
+    Name = String[15]
+    CarColor = Color
 
-    def from_layer(layer):
-        return String(''.join(chr(c) for c in layer))
+    def uppercase_name(self):
+        return self.Name.upper()
 
-    @classmethod
-    def random(cls, length_choice=None):
-        length = length_choice or random.randint(0, cls.SHAPE)
-        random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
-        return String(''.join(random_str_gen))
+    # TODO(pebaz): Support NN methods!
+    # @nn
+    # def uppercase_name(self) -> String[15]:
+    #     ...
+
+
+# TODO(pebaz): Could have entire type system with operator overloading...
+# TODO(pebaz): Need to make a Struct class that introspects class fields to find
+# TODO(pebaz):     shape of object.
+
+
+# Array[String[10]]  (array of 1 string of length 10)
+# Array[3, String[10]]  (array of 3 strings of length 10)
+
+# TODO(pebaz): Support Array[3, String[10]] for array of phone numbers
+# TODO(pebaz): This needs to have the right SHAPE and len.
+# TODO(pebaz): Shouldn't the __getitem__ method support key.SHAPE? or len(key)?
+'''

@@ -5,6 +5,7 @@ from pathlib import Path
 from keras.models import Sequential, load_model
 from keras.layers import Dense
 
+from nndt import *
 
 class NNFunc:
     """
@@ -142,89 +143,89 @@ class NNFunc:
 nn = NNFunc
 
 
-class NNDT:
-    "Neural Network-Aware Data Type"
-    SHAPE = 1
+# class NNDT:
+#     "Neural Network-Aware Data Type"
+#     SHAPE = 1
 
-    def __init__(self, value):
-        self.value = value
+#     def __init__(self, value):
+#         self.value = value
 
-    def __len__(self):
-        return self.SHAPE
+#     def __len__(self):
+#         return self.SHAPE
 
-    def to(self):
-        return self.value
+#     def to(self):
+#         return self.value
 
-    @staticmethod
-    def length_of(*args):
-        return sum(len(i) for i in args)
+#     @staticmethod
+#     def length_of(*args):
+#         return sum(len(i) for i in args)
 
-    def __str__(self):
-        return str(self.value)
+#     def __str__(self):
+#         return str(self.value)
 
-    @abstractmethod
-    def as_layer(self):
-        pass
+#     @abstractmethod
+#     def as_layer(self):
+#         pass
 
-    @staticmethod
-    def from_layer(layer):
-        pass
-
-
-class Int(NNDT):
-    def to(self):
-        "Return an int and round out as much innacuracy as possible."
-        return int(self.value)
-
-    @staticmethod
-    def random():
-        return Int(random.randint(-2147483648, 2147483647))
-
-    def as_layer(self):
-        return [self.value]
-
-    @staticmethod
-    def from_layer(layer):
-        (layer_value,) = layer
-        return Int(layer_value)
+#     @staticmethod
+#     def from_layer(layer):
+#         pass
 
 
-class String(NNDT):
-    SHAPE = 255
-    UNICODES = ''.join(
-        chr(i)
-        for i in range(32, 0x110000)
-        if chr(i).isprintable()
-    )
+# class Int(NNDT):
+#     def to(self):
+#         "Return an int and round out as much innacuracy as possible."
+#         return int(self.value)
 
-    def __init__(self, value):
-        "Create new string, padding it with zeroes if shorter than SHAPE."
-        assert len(value) <= self.SHAPE, f'String len capped at {self.SHAPE}'
-        self.value = value + '\0' * (self.SHAPE - len(value))
+#     @staticmethod
+#     def random():
+#         return Int(random.randint(-2147483648, 2147483647))
 
-    def as_layer(self):
-        return [ord(c) for c in self.value]
+#     def as_layer(self):
+#         return [self.value]
 
-    def from_layer(layer):
-        return String(''.join(chr(c) for c in layer))
-
-    @classmethod
-    def random(cls, length_choice=None):
-        length = length_choice or random.randint(0, cls.SHAPE)
-        random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
-        return String(''.join(random_str_gen))
+#     @staticmethod
+#     def from_layer(layer):
+#         (layer_value,) = layer
+#         return Int(layer_value)
 
 
-# @nn
-# def negate(number: Int) -> Int:
-#     return -number
+# class String(NNDT):
+#     SHAPE = 255
+#     UNICODES = ''.join(
+#         chr(i)
+#         for i in range(32, 0x110000)
+#         if chr(i).isprintable()
+#     )
+
+#     def __init__(self, value):
+#         "Create new string, padding it with zeroes if shorter than SHAPE."
+#         assert len(value) <= self.SHAPE, f'String len capped at {self.SHAPE}'
+#         self.value = value + '\0' * (self.SHAPE - len(value))
+
+#     def as_layer(self):
+#         return [ord(c) for c in self.value]
+
+#     def from_layer(layer):
+#         return String(''.join(chr(c) for c in layer))
+
+#     @classmethod
+#     def random(cls, length_choice=None):
+#         length = length_choice or random.randint(0, cls.SHAPE)
+#         random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
+#         return String(''.join(random_str_gen))
 
 
-# print()
-# print('Result  (-123):', negate(123))
-# print('Predict (-124):', negate.call_predicted(124))
-# print()
-# print('--------------------')
+@nn
+def negate(number: Int) -> Int:
+    return -number
+
+
+print()
+print('Result  (-123):', negate(123))
+print('Predict (-124):', negate.call_predicted(124))
+print()
+print('--------------------')
 # # negate.train()
 
 
@@ -240,14 +241,14 @@ class String(NNDT):
 # print('--------------------')
 
 
-@nn
-def first_char(a: String) -> String:
-    return a[0]
+# @nn
+# def first_char(a: String) -> String:
+#     return a[0]
 
-print()
-print('Result  ("abc"):', first_char("abc"))
-print('Predict ("bca"):', first_char.call_predicted("bca"))
-print()
-print('--------------------')
+# print()
+# print('Result  ("abc"):', first_char("abc"))
+# print('Predict ("bca"):', first_char.call_predicted("bca"))
+# print()
+# print('--------------------')
 
 #import ipdb; ipdb.set_trace()
