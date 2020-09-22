@@ -162,12 +162,13 @@ class NNDT:
     def __str__(self):
         return str(self.value)
 
+    @abstractmethod
     def as_layer(self):
-        raise NotImplemented()
+        pass
 
     @staticmethod
     def from_layer(layer):
-        raise NotImplemented()
+        pass
 
 
 class Int(NNDT):
