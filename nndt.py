@@ -49,5 +49,5 @@ class String(metaclass=NNDTType):
 print(5, NNDT)
 print(6, NNDT(3))
 print(7, NNDT[5])
-# print(8, NNDT[3](100))
-# print(9, String[100])
+print(8, NNDT[3](100))
+print(9, String[100])
