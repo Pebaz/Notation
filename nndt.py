@@ -64,15 +64,71 @@ class NNDT(metaclass=NNDTType):
     def __str__(self):
         return f'<{self.__class__.__name__}[{self.SHAPE}] {repr(self.value)}>'
 
+class Int(NNDT):
+    pass
+
 class String(NNDT, _VariableLength):
     pass
 
+
+
 print(5, NNDT)
 print(6, NNDT(3))
-print(7, NNDT[5])
-print(8, NNDT[3](100))
+try:
+    print(7, NNDT[5])
+except NNDTException as e:
+    print(7, e)
+try:
+    print(8, Int[3](100))
+except NNDTException as e:
+    print(8, e)
 print(9, String[100])
 print(10, String[100]('Foo'))
+print(11, Int(11))
+
+
+
+
+
+
+'''
+
+
+class Struct(NNDT, _VariableLength):
+    "Car = Struct[Int, Float, String[10], Array[3], Struct[Int, Int, Int]]"
+
+# DATA CLASSES https://docs.python.org/3/library/dataclasses.html
+
+class NNDTStruct:
+    """
+    Go and find each field that doesn't start with __ and then pack it's type
+    into a struct automatically. Marshalling and unmarshalling the fields work
+    as expected for each inner type.
+    """
+
+class Color(NNDTStruct):
+    Red: Float
+    Green: Float
+    Blue: Float
+
+class MyUserType(NNDTStruct):
+    NumWheels = Int
+    NumDoors = Int
+    Name = String[15]
+    CarColor = Color
+
+    def uppercase_name(self):
+        return self.Name.upper()
+
+    # TODO(pebaz): Support NN methods!
+    # @nn
+    # def uppercase_name(self) -> String[15]:
+    #     ...
+
+
+# TODO(pebaz): Could have entire type system with operator overloading...
+# TODO(pebaz): Need to make a Struct class that introspects class fields to find
+# TODO(pebaz):     shape of object.
 
 
 # Array[String[10]]  (array of 1 string of length 10)
@@ -80,4 +136,5 @@ print(10, String[100]('Foo'))
 
 # TODO(pebaz): Support Array[3, String[10]] for array of phone numbers
 # TODO(pebaz): This needs to have the right SHAPE and len.
-
+# TODO(pebaz): Shouldn't the __getitem__ method support key.SHAPE? or len(key)?
+'''
