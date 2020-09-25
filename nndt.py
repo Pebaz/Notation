@@ -130,12 +130,12 @@ class String(NNDT, _VariableLength):
     Value inputs shorter than SHAPE get padded with `\0`.
     """
     SHAPE = 5
-    MIN_UNICODE = 0
-    MAX_UNICODE = 0x110000
-    VALID_UNICODE = lambda c: max(min(c, String.MAX_UNICODE), String.MIN_UNICODE)
+    MIN_CODE = 0
+    MAX_CODE = 0x110000
+    VALID_UNICODE = lambda c: max(min(c, String.MAX_CODE), String.MIN_CODE)
     UNICODES = ''.join(
         chr(i)
-        for i in range(MIN_UNICODE, 0x110000)
+        for i in range(String.MAX_CODE, 0x110000)
         if chr(i).isprintable()
     )
 
@@ -149,7 +149,17 @@ class String(NNDT, _VariableLength):
 
     @classmethod
     def from_layer(cls, layer):
-        return String(''.join(chr(cls.VALID_UNICODE(c)) for c in layer))
+        """
+        Factory method to return a new String object from a given layer.
+
+        If a layer's value lies outside of the valid unicode sequence, it is
+        truncated to fit.
+
+        # TODO(pebaz): Should this only be true of repr() or str()?
+        Null characters '\0' are replaced with spaces for clarity.
+        """
+        converted_chars = chr(cls.VALID_UNICODE(c)) for c in layer
+        return String(''.join(converted_chars)).replace('\0', ' ')
 
     @classmethod
     def random(cls, length_choice=None):
@@ -279,7 +289,6 @@ class NNFunc:
         result_predict = nndt_prediction.to()
         nndt_return_value = self.__return_type__(result_accurate)
 
-        print('HEREEREERERERER')
         self.__model__.fit(input_values, [nndt_return_value.as_layer()])
 
         # If it matches, stop using the stored function!
