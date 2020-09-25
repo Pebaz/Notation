@@ -28,7 +28,7 @@ print('--------------------')
 
 
 @nn
-def first_char(a: String) -> String:
+def first_char(a: String) -> String[1]:
     return a[0]
 
 print()
@@ -37,4 +37,4 @@ print('Predict ("bca"):', repr(first_char.call_predicted("bca")))
 print()
 print('--------------------')
 
-#import ipdb; ipdb.set_trace()
+import ipdb; ipdb.set_trace()

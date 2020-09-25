@@ -69,6 +69,12 @@ class NNDTType(type):
     def __str__(self):
         return f'<{self.__name__}[{self.SHAPE}]>'
 
+    def __repr__(self):
+        return str(self)
+
+    def __format__(self):
+        return str(self)
+
     def __len__(self):
         return self.SHAPE
 
@@ -82,6 +88,12 @@ class NNDT(metaclass=NNDTType):
 
     def __str__(self):
         return f'<{self.__class__.__name__}[{self.SHAPE}] {repr(self.value)}>'
+
+    def __repr__(self):
+        return str(self)
+
+    def __format__(self):
+        return str(self)
 
     def __len__(self):
         return self.SHAPE
@@ -135,7 +147,7 @@ class String(NNDT, _VariableLength):
     VALID_UNICODE = lambda c: max(min(c, String.MAX_CODE), String.MIN_CODE)
     UNICODES = ''.join(
         chr(i)
-        for i in range(String.MAX_CODE, 0x110000)
+        for i in range(MIN_CODE, 0x110000)
         if chr(i).isprintable()
     )
 
@@ -143,6 +155,10 @@ class String(NNDT, _VariableLength):
         "Create new string, padding it with zeroes if shorter than SHAPE."
         assert len(value) <= self.SHAPE, f'String len capped at {self.SHAPE}'
         self.value = value + '\0' * (self.SHAPE - len(value))
+
+    def __str__(self):
+        display_val = self.value.replace('\0', '_')
+        return f'<{self.__class__.__name__}[{self.SHAPE}] {repr(display_val)}>'
 
     def as_layer(self):
         return [ord(c) for c in self.value]
@@ -158,14 +174,17 @@ class String(NNDT, _VariableLength):
         # TODO(pebaz): Should this only be true of repr() or str()?
         Null characters '\0' are replaced with spaces for clarity.
         """
-        converted_chars = chr(cls.VALID_UNICODE(c)) for c in layer
-        return String(''.join(converted_chars)).replace('\0', ' ')
+        converted_chars = ''.join((chr(cls.VALID_UNICODE(c)) for c in layer))
+        return String[cls.SHAPE](converted_chars.rstrip('\0'))
 
     @classmethod
     def random(cls, length_choice=None):
         length = length_choice or random.randint(0, cls.SHAPE)
-        random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
-        return String(''.join(random_str_gen))
+        if not length:
+            random_str_gen = ''
+        else:
+            random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
+        return String[cls.SHAPE](''.join(random_str_gen))
 
 
 class NNFunc:
@@ -251,8 +270,6 @@ class NNFunc:
             python_output = self.call_raw(*training_layer)
             output_as_layer = self.__return_type__(python_output).as_layer()
             data_outputs.append(output_as_layer)
-
-        import ipdb; ipdb.set_trace()
 
         self.__model__.fit(data_inputs, data_outputs)
 
