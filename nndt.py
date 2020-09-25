@@ -5,8 +5,8 @@ import inspect
 import atexit
 import random
 from pathlib import Path
-from keras.models import Sequential, load_model
-from keras.layers import Dense
+from keras.models import Model, Sequential, load_model
+from keras.layers import Input, Dense
 
 
 class _VariableLength:
@@ -189,10 +189,10 @@ class NNFunc:
             assert arg != inspect._empty, 'Arguments must be typed'
             assert issubclass(arg.annotation, NNDT), 'Arguments must be NNDTs'
 
-    def create_model(self, num_input_nodes, num_output_nodes):
-        model = Sequential([
-            Dense(num_output_nodes, input_shape=(num_input_nodes,))
-        ])
+    def create_model(self, num_inputs, num_outputs):
+        inputs = Input(shape=(num_inputs,))
+        outputs = Dense(num_outputs)(inputs)
+        model = Model(inputs=inputs, outputs=outputs)
         model.compile(loss='mse', optimizer='adam')
         return model
 
@@ -222,9 +222,15 @@ class NNFunc:
         python_inputs = []
         data_inputs = []
         for _ in range(enthusiasm):
-            layer = [nndt_type.random() for nndt_type in self.arg_types]
-            python_inputs.append([l.value for l in layer])
-            data_inputs.extend([l.as_layer() for l in layer])
+            signature_layers = [
+                nndt_type.random() for nndt_type in self.arg_types
+            ]
+            python_inputs.append([layer.value for layer in signature_layers])
+
+            # Flatten the layer into one big layer and append it as an input
+            data_inputs.append([
+                node for layer in signature_layers for node in layer.as_layer()
+            ])
 
         data_outputs = []
         for training_layer in python_inputs:
