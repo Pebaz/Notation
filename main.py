@@ -3,28 +3,28 @@ from nndt import *
 
 
 
-@nn
-def negate(number: Int) -> Int:
-    return -number
+# @nn
+# def negate(number: Int) -> Int:
+#     return -number
 
 
-print()
-print('Result  (-123):', negate(123))
-print('Predict (-124):', negate.call_predicted(124))
-print()
-print('--------------------')
-# # negate.train()
+# print()
+# print('Result  (-123):', negate(123))
+# print('Predict (-124):', negate.call_predicted(124))
+# print()
+# print('--------------------')
+# # # negate.train()
 
 
-@nn
-def add(a: Int, b: Int) -> Int:
-    return a + b
+# @nn
+# def add(a: Int, b: Int) -> Int:
+#     return a + b
 
-print()
-print('Result  (300):', add(100, 200))
-print('Predict (15):', add.call_predicted(10, 5))
-print()
-print('--------------------')
+# print()
+# print('Result  (300):', add(100, 200))
+# print('Predict (15):', add.call_predicted(10, 5))
+# print()
+# print('--------------------')
 
 
 @nn

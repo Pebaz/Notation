@@ -1,15 +1,16 @@
 from random import randint
-from keras.models import Sequential
-from keras.layers import Dense
+from keras.models import Model, Sequential
+from keras.layers import Input, Dense
 
 INPUT_NODES = 2
 OUTPUT_NODES = 3
 
+# get rid of sequential, use functional api
 
 def get_model(num_inputs, num_outputs):
-    model = Sequential([
-        Dense(num_outputs, input_shape=(num_inputs,))
-    ])
+    inputs = Input(shape=(num_inputs,))
+    outputs = Dense(num_outputs)(inputs)
+    model = Model(inputs=inputs, outputs=outputs)
     model.compile(loss='mse', optimizer='adam')
     return model
 

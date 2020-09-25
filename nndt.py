@@ -8,6 +8,7 @@ from pathlib import Path
 from keras.models import Sequential, load_model
 from keras.layers import Dense
 
+
 class _VariableLength:
     "Mixin class to ensure that staticly sized classes don't get indexed."
 
@@ -68,6 +69,9 @@ class NNDTType(type):
     def __str__(self):
         return f'<{self.__name__}[{self.SHAPE}]>'
 
+    def __len__(self):
+        return self.SHAPE
+
 
 class NNDT(metaclass=NNDTType):
     "Neural Network-Aware Data Type"
@@ -125,7 +129,7 @@ class String(NNDT, _VariableLength):
     Can be customized to have any length using subscript: String[10]
     Value inputs shorter than SHAPE get padded with `\0`.
     """
-    SHAPE = 255
+    SHAPE = 5
     UNICODES = ''.join(
         chr(i)
         for i in range(32, 0x110000)
@@ -185,6 +189,13 @@ class NNFunc:
             assert arg != inspect._empty, 'Arguments must be typed'
             assert issubclass(arg.annotation, NNDT), 'Arguments must be NNDTs'
 
+    def create_model(self, num_input_nodes, num_output_nodes):
+        model = Sequential([
+            Dense(num_output_nodes, input_shape=(num_input_nodes,))
+        ])
+        model.compile(loss='mse', optimizer='adam')
+        return model
+
     def initialize_function(self):
         self.arg_types = [
             val for key, val in self.func.__annotations__.items()
@@ -196,11 +207,10 @@ class NNFunc:
         else:
             self.__pycache__.mkdir(exist_ok=True)
             num_input_nodes = NNDT.length_of(self.arg_types)
-
-            self.__model__ = Sequential()
-            self.__model__.add(Dense(1, input_shape=(num_input_nodes,)))
-            self.__model__.compile(loss='mse', optimizer='adam')
-
+            num_output_nodes = len(self.__return_type__)
+            self.__model__ = self.create_model(
+                num_input_nodes, num_output_nodes
+            )
             self.train()
 
     def train(self, enthusiasm=5):
@@ -209,20 +219,22 @@ class NNFunc:
         return value obtained from the function.
         """
 
-        data_input = []
+        python_inputs = []
+        data_inputs = []
         for _ in range(enthusiasm):
-            layer = []
-            for nndt_type in self.arg_types:
-                layer.extend(nndt_type.random().as_layer())
-            data_input.append(layer)
+            layer = [nndt_type.random() for nndt_type in self.arg_types]
+            python_inputs.append([l.value for l in layer])
+            data_inputs.extend([l.as_layer() for l in layer])
 
-        data_label = []
-        for training_layer in data_input:
-            signature = self.layer_as_signature(training_layer)
-            marshalled_values = [nndt_inst.value for nndt_inst in signature]
-            data_label.append(self.call_raw(*marshalled_values))
+        data_outputs = []
+        for training_layer in python_inputs:
+            python_output = self.call_raw(*training_layer)
+            output_as_layer = self.__return_type__(python_output).as_layer()
+            data_outputs.append(output_as_layer)
 
-        self.__model__.fit(data_input, data_label)
+        import ipdb; ipdb.set_trace()
+
+        self.__model__.fit(data_inputs, data_outputs)
 
     def layer_as_signature(self, nodes):
         signature = []
