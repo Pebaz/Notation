@@ -174,7 +174,9 @@ class String(NNDT, _VariableLength):
         # TODO(pebaz): Should this only be true of repr() or str()?
         Null characters '\0' are replaced with spaces for clarity.
         """
-        converted_chars = ''.join((chr(cls.VALID_UNICODE(c)) for c in layer))
+        converted_chars = ''.join(
+            (chr(cls.VALID_UNICODE(round(c))) for c in layer)
+        )
         return String[cls.SHAPE](converted_chars.rstrip('\0'))
 
     @classmethod
@@ -246,7 +248,7 @@ class NNFunc:
             )
             self.train()
 
-    def train(self, enthusiasm=5):
+    def train(self, enthusiasm=1000):
         """
         Automatically trains the NN using random inputs coupled with the correct
         return value obtained from the function.
