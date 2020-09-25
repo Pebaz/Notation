@@ -130,9 +130,12 @@ class String(NNDT, _VariableLength):
     Value inputs shorter than SHAPE get padded with `\0`.
     """
     SHAPE = 5
+    MIN_UNICODE = 0
+    MAX_UNICODE = 0x110000
+    VALID_UNICODE = lambda c: max(min(c, String.MAX_UNICODE), String.MIN_UNICODE)
     UNICODES = ''.join(
         chr(i)
-        for i in range(32, 0x110000)
+        for i in range(MIN_UNICODE, 0x110000)
         if chr(i).isprintable()
     )
 
@@ -144,8 +147,9 @@ class String(NNDT, _VariableLength):
     def as_layer(self):
         return [ord(c) for c in self.value]
 
-    def from_layer(layer):
-        return String(''.join(chr(c) for c in layer))
+    @classmethod
+    def from_layer(cls, layer):
+        return String(''.join(chr(cls.VALID_UNICODE(c)) for c in layer))
 
     @classmethod
     def random(cls, length_choice=None):
@@ -206,7 +210,7 @@ class NNFunc:
             self.__model__ = load_model(self.nn_file)
         else:
             self.__pycache__.mkdir(exist_ok=True)
-            num_input_nodes = NNDT.length_of(self.arg_types)
+            num_input_nodes = NNDT.length_of(*self.arg_types)
             num_output_nodes = len(self.__return_type__)
             self.__model__ = self.create_model(
                 num_input_nodes, num_output_nodes
@@ -275,6 +279,7 @@ class NNFunc:
         result_predict = nndt_prediction.to()
         nndt_return_value = self.__return_type__(result_accurate)
 
+        print('HEREEREERERERER')
         self.__model__.fit(input_values, [nndt_return_value.as_layer()])
 
         # If it matches, stop using the stored function!

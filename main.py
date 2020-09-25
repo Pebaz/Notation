@@ -3,16 +3,16 @@ from nndt import *
 
 
 
-# @nn
-# def negate(number: Int) -> Int:
-#     return -number
+@nn
+def negate(number: Int) -> Int:
+    return -number
 
 
-# print()
-# print('Result  (-123):', negate(123))
-# print('Predict (-124):', negate.call_predicted(124))
-# print()
-# print('--------------------')
+print()
+print('Result  (-123):', negate(123))
+print('Predict (-124):', negate.call_predicted(124))
+print()
+print('--------------------')
 # # # negate.train()
 
 
@@ -27,14 +27,14 @@ print()
 print('--------------------')
 
 
-# @nn
-# def first_char(a: String) -> String:
-#     return a[0]
+@nn
+def first_char(a: String) -> String:
+    return a[0]
 
-# print()
-# print('Result  ("abc"):', first_char("abc"))
-# print('Predict ("bca"):', first_char.call_predicted("bca"))
-# print()
-# print('--------------------')
+print()
+print('Result  ("abc"):', repr(first_char("abc")))
+print('Predict ("bca"):', repr(first_char.call_predicted("bca")))
+print()
+print('--------------------')
 
 #import ipdb; ipdb.set_trace()
