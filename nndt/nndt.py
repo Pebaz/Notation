@@ -3,10 +3,12 @@
 
 import inspect
 import atexit
-import random
 from pathlib import Path
 from keras.models import Model, Sequential, load_model
 from keras.layers import Input, Dense
+
+
+__all__ = 'nn', 'NNDT', 'NNDTException', 'NNDTIndexException'
 
 
 class _VariableLength:
@@ -111,82 +113,6 @@ class NNDT(metaclass=NNDTType):
     @staticmethod
     def from_layer(layer):
         pass
-
-
-class Int(NNDT):
-    """
-    Integer class of shape 1.
-    Supports numbers from -2147483648 to 2147483647.
-    """
-    def to(self):
-        "Return an int and round out as much innacuracy as possible."
-        return int(self.value)
-
-    @staticmethod
-    def random():
-        return Int(random.randint(-2147483648, 2147483647))
-
-    def as_layer(self):
-        return [self.value]
-
-    @staticmethod
-    def from_layer(layer):
-        (layer_value,) = layer
-        return Int(layer_value)
-
-
-class String(NNDT, _VariableLength):
-    """
-    String class of shape 255.
-    Can be customized to have any length using subscript: String[10]
-    Value inputs shorter than SHAPE get padded with `\0`.
-    """
-    SHAPE = 5
-    MIN_CODE = 0
-    MAX_CODE = 0x110000
-    VALID_UNICODE = lambda c: max(min(c, String.MAX_CODE), String.MIN_CODE)
-    UNICODES = ''.join(
-        chr(i)
-        for i in range(MIN_CODE, 0x110000)
-        if chr(i).isprintable()
-    )
-
-    def __init__(self, value):
-        "Create new string, padding it with zeroes if shorter than SHAPE."
-        assert len(value) <= self.SHAPE, f'String len capped at {self.SHAPE}'
-        self.value = value + '\0' * (self.SHAPE - len(value))
-
-    def __str__(self):
-        display_val = self.value.replace('\0', '_')
-        return f'<{self.__class__.__name__}[{self.SHAPE}] {repr(display_val)}>'
-
-    def as_layer(self):
-        return [ord(c) for c in self.value]
-
-    @classmethod
-    def from_layer(cls, layer):
-        """
-        Factory method to return a new String object from a given layer.
-
-        If a layer's value lies outside of the valid unicode sequence, it is
-        truncated to fit.
-
-        # TODO(pebaz): Should this only be true of repr() or str()?
-        Null characters '\0' are replaced with spaces for clarity.
-        """
-        converted_chars = ''.join(
-            (chr(cls.VALID_UNICODE(round(c))) for c in layer)
-        )
-        return String[cls.SHAPE](converted_chars.rstrip('\0'))
-
-    @classmethod
-    def random(cls, length_choice=None):
-        length = length_choice or random.randint(0, cls.SHAPE)
-        if not length:
-            random_str_gen = ''
-        else:
-            random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
-        return String[cls.SHAPE](''.join(random_str_gen))
 
 
 class NNFunc:
@@ -336,3 +262,58 @@ class NNFunc:
 
 
 nn = NNFunc
+
+
+
+
+
+'''
+
+
+class Struct(NNDT, _VariableLength):
+    "Car = Struct[Int, Float, String[10], Array[3], Struct[Int, Int, Int]]"
+
+# DATA CLASSES https://docs.python.org/3/library/dataclasses.html
+
+class NNDTStruct:
+    """
+    Go and find each field that doesn't start with __ and then pack it's type
+    into a struct automatically. Marshalling and unmarshalling the fields work
+    as expected for each inner type.
+    """
+
+class Color(NNDTStruct):
+    Red: Float
+    Green: Float
+    Blue: Float
+
+class MyUserType(NNDTStruct):
+    NumWheels = Int
+    NumDoors = Int
+    Name = String[15]
+    CarColor = Color
+
+    def uppercase_name(self):
+        return self.Name.upper()
+
+    # TODO(pebaz): Support NN methods!
+    # @nn
+    # def uppercase_name(self) -> String[15]:
+    #     ...
+
+
+# TODO(pebaz): Could have entire type system with operator overloading...
+# TODO(pebaz): Need to make a Struct class that introspects class fields to find
+# TODO(pebaz):     shape of object.
+
+
+# Array[String[10]]  (array of 1 string of length 10)
+# Array[3, String[10]]  (array of 3 strings of length 10)
+
+# TODO(pebaz): Support Array[3, String[10]] for array of phone numbers
+# TODO(pebaz): This needs to have the right SHAPE and len.
+# TODO(pebaz): Shouldn't the __getitem__ method support key.SHAPE? or len(key)?
+'''
+
+
+
