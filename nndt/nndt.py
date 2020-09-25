@@ -19,6 +19,18 @@ class _VariableLength:
         return self.SHAPE + sum(len(v) for v in self.value)
 
 
+class _Container(_VariableLength):
+    """
+    Mixin class that allows collection types like Array.
+
+    Makes this possible: Array[10, String[3]]
+    Total Shape: 30  # 10 * 3
+
+    Type: Array[2, Array[10, String[3]]]
+    Total Shape: 60  # 2 * 10 * 3
+    """
+
+
 class NNDTException(Exception):
     "Base Exception for NNDT library."
 
