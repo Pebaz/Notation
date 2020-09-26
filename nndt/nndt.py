@@ -24,7 +24,6 @@ class _VariableLength(_CustomizableType):
 
     @staticmethod
     def customize(dict_, key):
-        "Override as you see fit."
         dict_['SHAPE'] = key
 
     # def __len__(self):
@@ -44,18 +43,16 @@ class _Container(_CustomizableType):
     Total Shape: 60  # 2 * 10 * 3
     """
 
-    # TODO(pebaz): Should len(Array[3, Array[10, Int]]) == 30? Or 3/len() == 30?
-
     @staticmethod
     def customize(dict_, key):
-        "Override as you see fit."
         size, of_type = key
         dict_['SHAPE'] = size * len(of_type)
         dict_['OF_TYPE'] = of_type
+        dict_['COUNT'] = size
 
-
+    # TODO(pebaz): Should len(Array[3, Array[10, Int]]) == 30? Or 3/len() == 30?
     # def __len__(self):
-    #     return self.SHAPE + sum([3])
+    #     return self.SHAPE * len(self.OF_TYPE)
 
 
 class NNDTException(Exception):
