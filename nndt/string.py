@@ -2,7 +2,7 @@ import random
 from . nndt import NNDT, _VariableLength
 
 
-class String(NNDT, _VariableLength):
+class String(_VariableLength, NNDT):
     """
     String class of shape 255.
     Can be customized to have any length using subscript: String[10]

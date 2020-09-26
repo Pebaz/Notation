@@ -11,15 +11,29 @@ from keras.layers import Input, Dense
 __all__ = 'nn', 'NNDT', 'NNDTException', 'NNDTIndexException'
 
 
-class _VariableLength:
+class _CustomizableType:
+    ""
+
+    @staticmethod
+    def customize(dict_, key):
+        "Override as you see fit."
+
+
+class _VariableLength(_CustomizableType):
     "Mixin class to ensure that staticly sized classes don't get indexed."
 
-    def __len__(self):
-        "Length is equal to shape plus the shape of all contained values."
-        return self.SHAPE + sum(len(v) for v in self.value)
+    @staticmethod
+    def customize(dict_, key):
+        "Override as you see fit."
+        dict_['SHAPE'] = key
+
+    # def __len__(self):
+    #     "Length is equal to shape plus the shape of all contained values."
+    #     return self.SHAPE + sum(len(v) for v in self.value)
 
 
-class _Container(_VariableLength):
+
+class _Container(_CustomizableType):
     """
     Mixin class that allows collection types like Array.
 
@@ -29,6 +43,19 @@ class _Container(_VariableLength):
     Type: Array[2, Array[10, String[3]]]
     Total Shape: 60  # 2 * 10 * 3
     """
+
+    # TODO(pebaz): Should len(Array[3, Array[10, Int]]) == 30? Or 3/len() == 30?
+
+    @staticmethod
+    def customize(dict_, key):
+        "Override as you see fit."
+        size, of_type = key
+        dict_['SHAPE'] = size * len(of_type)
+        dict_['OF_TYPE'] = of_type
+
+
+    # def __len__(self):
+    #     return self.SHAPE + sum([3])
 
 
 class NNDTException(Exception):
@@ -68,10 +95,30 @@ class NNDTType(type):
 
         bases, dict_ = self.nndt_types[self.__name__]
 
-        if _VariableLength not in bases:
-            raise NNDTIndexException(self, key)
+        customizer = bases[0]
 
-        dict_['SHAPE'] = key
+        if not issubclass(customizer, _CustomizableType):
+            raise Exception(
+                'Type cannot be customized. '
+                'Is a subclass of _CustomizableType first in inheritance?'
+            )
+
+        # Perform custom construction per customizer type
+        customizer.customize(dict_, key)
+            
+
+        #if _CustomizableType not in bases:
+        # raise NNDTIndexException(self, key)
+
+        #dict_['SHAPE'] = key  # Set initial size tentatively
+
+
+        # Strings, Byte Slices
+
+        # # Arrays, Structs, Etc.
+        # if isinstance(key, tuple) and _Container in bases:
+        #     size, of_type = key
+        #     dict_['SHAPE'] = size * len(of_type)
 
         return super().__new__(
             self.__class__,
