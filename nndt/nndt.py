@@ -115,20 +115,6 @@ class NNDTType(type):
 
         # Perform custom construction per customizer type
         customizer.customize(dict_, key)
-            
-
-        #if _CustomizableType not in bases:
-        # raise NNDTIndexException(self, key)
-
-        #dict_['SHAPE'] = key  # Set initial size tentatively
-
-
-        # Strings, Byte Slices
-
-        # # Arrays, Structs, Etc.
-        # if isinstance(key, tuple) and _Container in bases:
-        #     size, of_type = key
-        #     dict_['SHAPE'] = size * len(of_type)
 
         return super().__new__(
             self.__class__,
@@ -182,6 +168,10 @@ class NNDT(metaclass=NNDTType):
     @staticmethod
     def from_layer(layer):
         pass
+
+    def as_pyobj(self):
+        "Returns the given NNDT as a Python-compatible object."
+        return self.value
 
 
 class NNFunc:
@@ -243,7 +233,7 @@ class NNFunc:
             )
             self.train()
 
-    def train(self, enthusiasm=1000):
+    def train(self, enthusiasm=10000):
         """
         Automatically trains the NN using random inputs coupled with the correct
         return value obtained from the function.

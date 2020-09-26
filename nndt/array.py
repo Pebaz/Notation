@@ -5,7 +5,6 @@ from . nndt import NNDT, _Container
 # TODO(pebaz): Switch meaning of SHAPE and len()
 
 
-
 class Array(_Container, NNDT):
     def __init__(self, value):
         size = len(value)
@@ -56,3 +55,6 @@ class Array(_Container, NNDT):
     @classmethod
     def random(cls):
         return cls([cls.OF_TYPE.random() for _ in range(cls.COUNT)])
+
+    def as_pyobj(self):
+        return [element.as_pyobj() for element in self.value]

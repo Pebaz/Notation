@@ -54,3 +54,7 @@ class String(_VariableLength, NNDT):
         else:
             random_str_gen = (random.choice(cls.UNICODES) for _ in range(length))
         return String[cls.SHAPE](''.join(random_str_gen))
+
+    def as_pyobj(self):
+        "Removes padding."
+        return self.value.strip('\0')
