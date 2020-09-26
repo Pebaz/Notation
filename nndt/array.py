@@ -42,23 +42,77 @@ class Array(_Container, NNDT):
         Null characters '\0' are replaced with spaces for clarity.
         """
         size = len(layer)
-        assert size == self.SHAPE, f'Input layer too small: {size}/{self.SHAPE}'
+        assert size == cls.SHAPE, f'Input layer too small: {size}/{cls.SHAPE}'
 
         # elements = []
         # ptr = 0
-        # for _ in range(self.COUNT):
-        #     node_slice = layer[ptr:ptr + len(self.OF_TYPE)]
-        #     instance = self.OF_TYPE.from_layer(node_slice)
+        # for _ in range(cls.COUNT):
+        #     node_slice = layer[ptr:ptr + len(cls.OF_TYPE)]
+        #     instance = cls.OF_TYPE.from_layer(node_slice)
         #     elements.append(instance)
-        #     ptr += len(self.OF_TYPE)
+        #     ptr += len(cls.OF_TYPE)
 
         elements = []
-        for ptr in range(0, self.COUNT - 1, len(self.OF_TYPE)):
-            node_slice = layer[ptr:ptr + len(self.OF_TYPE)]
-            instance = self.OF_TYPE.from_layer(node_slice)
+        for ptr in range(0, cls.COUNT - 1, len(cls.OF_TYPE)):
+            node_slice = layer[ptr:ptr + len(cls.OF_TYPE)]
+            instance = cls.OF_TYPE.from_layer(node_slice)
             elements.append(instance)
 
-        return self.__class__(elements)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        THIS IS NOT RIGHT:
+        Array[3, String[3]].from_layer(Array[3, String[3]].random().as_layer())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        return cls(elements)
 
     @classmethod
     def random(cls):
