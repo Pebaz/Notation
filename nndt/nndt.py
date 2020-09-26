@@ -8,7 +8,7 @@ from keras.models import Model, Sequential, load_model
 from keras.layers import Input, Dense
 
 
-__all__ = 'nn', 'NNDT', 'NNDTException', 'NNDTIndexException'
+__all__ = 'nn', 'NNDT', 'NNDTException'
 
 
 class _CustomizableType:
@@ -46,13 +46,9 @@ class _Container(_CustomizableType):
     @staticmethod
     def customize(dict_, key):
         size, of_type = key
-        dict_['SHAPE'] = size * len(of_type)
+        dict_['SHAPE'] = size
         dict_['OF_TYPE'] = of_type
         dict_['COUNT'] = size
-
-    # TODO(pebaz): Should len(Array[3, Array[10, Int]]) == 30? Or 3/len() == 30?
-    # def __len__(self):
-    #     return self.SHAPE * len(self.OF_TYPE)
 
 
 class _Struct(_CustomizableType):
@@ -70,18 +66,6 @@ class _Struct(_CustomizableType):
 
 class NNDTException(Exception):
     "Base Exception for NNDT library."
-
-
-class NNDTIndexException(NNDTException):
-    def __init__(self, class_, key):
-        self.class_ = class_
-        self.key = key
-
-    def __str__(self):
-        return (
-            f'{self.class_.__name__} has a static SHAPE of {self.class_.SHAPE}, '
-            f'cannot be set to {self.key}'
-        )
 
 
 class NNDTType(type):
@@ -133,6 +117,7 @@ class NNDTType(type):
         return str(self)
 
     def __len__(self):
+        "Customize for types like Array to return total shape, not just count."
         return self.SHAPE
 
 
@@ -171,6 +156,20 @@ class NNDT(metaclass=NNDTType):
     @staticmethod
     def from_layer(layer):
         pass
+
+
+class NNDTContainerType(NNDTType):
+    # TODO(pebaz): Should len(Array[3, Array[10, Int]]) == 30? Or 3/len() == 30?
+    def __len__(self):
+        return self.SHAPE * len(self.OF_TYPE)
+
+    def __str__(self):
+        of_type = str(self.OF_TYPE)[1:-1]
+        return f'<{self.__name__}[{self.SHAPE}, {of_type}]>'
+
+
+class NNDTContainer(NNDT, metaclass=NNDTContainerType):
+    "Base class to allow __len__ on _Container types."
 
 
 class NNFunc:
@@ -264,10 +263,12 @@ class NNFunc:
         ptr = 0
         
         for nndt_type in self.arg_types:
-            node_slice = nodes[ptr:ptr + nndt_type.SHAPE]
+            shape = len(nndt_type)
+            #node_slice = nodes[ptr:ptr + nndt_type.SHAPE]
+            node_slice = nodes[ptr:ptr + shape]
             instance = nndt_type.from_layer(node_slice)
             signature.append(instance)
-            ptr += nndt_type.SHAPE
+            ptr += shape
 
         return signature
 

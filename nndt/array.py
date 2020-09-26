@@ -1,11 +1,11 @@
 import random
-from . nndt import NNDT, _Container
+from . nndt import NNDT, _Container, NNDTContainer
 
 
 # TODO(pebaz): Switch meaning of SHAPE and len()
 
 
-class Array(_Container, NNDT):
+class Array(_Container, NNDTContainer):
     def __init__(self, value):
         size = len(value)
         assert size <= self.COUNT, f'Input array too large: {size}/{self.COUNT}'
