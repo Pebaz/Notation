@@ -144,7 +144,9 @@ class NNDT(metaclass=NNDTType):
         self.value = value
 
     def __str__(self):
-        return f'<{self.__class__.__name__}[{self.SHAPE}] {repr(self.value)}>'
+        return (
+            f'<{self.__class__.__name__}[{self.SHAPE}] {repr(self.to())}>'
+        )
 
     def __repr__(self):
         return str(self)
@@ -156,6 +158,7 @@ class NNDT(metaclass=NNDTType):
         return self.SHAPE
 
     def to(self):
+        "Returns the given NNDT as a Python-compatible object."
         return self.value
 
     @staticmethod
@@ -168,10 +171,6 @@ class NNDT(metaclass=NNDTType):
     @staticmethod
     def from_layer(layer):
         pass
-
-    def as_pyobj(self):
-        "Returns the given NNDT as a Python-compatible object."
-        return self.value
 
 
 class NNFunc:

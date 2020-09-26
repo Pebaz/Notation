@@ -56,5 +56,5 @@ class Array(_Container, NNDT):
     def random(cls):
         return cls([cls.OF_TYPE.random() for _ in range(cls.COUNT)])
 
-    def as_pyobj(self):
-        return [element.as_pyobj() for element in self.value]
+    def to(self):
+        return [element.to() for element in self.value]
