@@ -44,73 +44,12 @@ class Array(_Container, NNDT):
         size = len(layer)
         assert size == cls.SHAPE, f'Input layer too small: {size}/{cls.SHAPE}'
 
-        # elements = []
-        # ptr = 0
-        # for _ in range(cls.COUNT):
-        #     node_slice = layer[ptr:ptr + len(cls.OF_TYPE)]
-        #     instance = cls.OF_TYPE.from_layer(node_slice)
-        #     elements.append(instance)
-        #     ptr += len(cls.OF_TYPE)
-
+        chunk_size = len(cls.OF_TYPE)
         elements = []
-        for ptr in range(0, cls.COUNT - 1, len(cls.OF_TYPE)):
-            node_slice = layer[ptr:ptr + len(cls.OF_TYPE)]
+        for ptr in range(0, cls.COUNT * chunk_size, chunk_size):
+            node_slice = layer[ptr:ptr + chunk_size]
             instance = cls.OF_TYPE.from_layer(node_slice)
             elements.append(instance)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        THIS IS NOT RIGHT:
-        Array[3, String[3]].from_layer(Array[3, String[3]].random().as_layer())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         return cls(elements)
 

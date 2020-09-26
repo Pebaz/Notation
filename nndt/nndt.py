@@ -55,6 +55,19 @@ class _Container(_CustomizableType):
     #     return self.SHAPE * len(self.OF_TYPE)
 
 
+class _Struct(_CustomizableType):
+    """
+    Mixin class 
+
+    Struct[Int, Int, Float, String[10]]
+    """
+
+    @staticmethod
+    def customize(dict_, nndt_types):
+        dict_['SHAPE'] = NNDT.length_of(*nndt_types)
+        dict_['TYPES'] = nndt_types
+
+
 class NNDTException(Exception):
     "Base Exception for NNDT library."
 
