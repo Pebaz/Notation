@@ -12,8 +12,7 @@ __all__ = 'nn', 'NNDT', 'NNDTException'
 
 
 class _CustomizableType:
-    ""
-
+    "Base class for all other mixin classes."
     @staticmethod
     def customize(dict_, key):
         "Override as you see fit."
@@ -25,11 +24,6 @@ class _VariableLength(_CustomizableType):
     @staticmethod
     def customize(dict_, key):
         dict_['SHAPE'] = key
-
-    # def __len__(self):
-    #     "Length is equal to shape plus the shape of all contained values."
-    #     return self.SHAPE + sum(len(v) for v in self.value)
-
 
 
 class _Container(_CustomizableType):
@@ -60,6 +54,10 @@ class _Struct(_CustomizableType):
 
     @staticmethod
     def customize(dict_, nndt_types):
+        """
+        Usage of NNDT.length_of() is correct since Structs act as one big unit.
+        I.e. their shape is not different to the number of packed types.
+        """
         dict_['SHAPE'] = NNDT.length_of(*nndt_types)
         dict_['TYPES'] = nndt_types
 
@@ -92,7 +90,7 @@ class NNDTType(type):
         customizer = bases[0]
 
         if not issubclass(customizer, _CustomizableType):
-            raise Exception(
+            raise NNDTException(
                 'Type cannot be customized. '
                 'Is a subclass of _CustomizableType first in inheritance?'
             )
@@ -159,7 +157,9 @@ class NNDT(metaclass=NNDTType):
 
 
 class NNDTContainerType(NNDTType):
-    # TODO(pebaz): Should len(Array[3, Array[10, Int]]) == 30? Or 3/len() == 30?
+    """
+    Exists purely so len() and str() methods can be called on container types.
+    """
     def __len__(self):
         return self.SHAPE * len(self.OF_TYPE)
 
@@ -169,7 +169,14 @@ class NNDTContainerType(NNDTType):
 
 
 class NNDTContainer(NNDT, metaclass=NNDTContainerType):
-    "Base class to allow __len__ on _Container types."
+    """
+    Base class to allow __len__ on _Container types.
+    Why not just use NNDTContainerType? Because `metaclass=NNDTContainerType` is
+    not as convenient. Also, NNDT is to NNDTType as NNDTContainer is to
+    NNDTContainerType:
+    NNDT          <-metaclass-> NNDTType
+    NNDTContainer <-metaclass-> NNDTContainerType
+    """
 
 
 class NNFunc:
