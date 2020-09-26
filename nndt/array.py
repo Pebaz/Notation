@@ -1,7 +1,9 @@
 import random
 from . nndt import NNDT, _Container
 
-#arr = Array[10, String[3]]  # 10 * 3 = _Container
+
+# TODO(pebaz): Switch meaning of SHAPE and len()
+
 
 
 class Array(_Container, NNDT):
@@ -9,10 +11,15 @@ class Array(_Container, NNDT):
         size = len(value)
         assert size <= self.COUNT, f'Input array too large: {size}/{self.COUNT}'
 
-        self.value = [self.OF_TYPE(element) for element in value]
+        self.value = []
+        for element in value:
+            if isinstance(element, NNDT):
+                self.value.append(element)  # Don't marshall, already done
+            else:  # It's a Python object, marshall it
+                self.value.append(self.OF_TYPE(element))
 
         complete_size = NNDT.length_of(*self.value)
-        assert complete_size <= self.SIZE, (
+        assert complete_size <= self.SHAPE, (
             f'Input elements marshalled into a size greater than the array can '
             f'store: {complete_size}/{self.SHAPE}'
         )
@@ -21,6 +28,7 @@ class Array(_Container, NNDT):
         layer = []
         for element in self.value:
             layer.extend(element.as_layer())
+        return layer
 
     @classmethod
     def from_layer(cls, layer):
@@ -54,5 +62,4 @@ class Array(_Container, NNDT):
 
     @classmethod
     def random(cls):
-        elements = [self.OF_TYPE.random() for _ in range(self.COUNT)]
-        return self.__class__(elements)
+        return cls([cls.OF_TYPE.random() for _ in range(cls.COUNT)])
