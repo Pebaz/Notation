@@ -2,6 +2,7 @@
 """
 
 import json
+import hashlib
 import inspect
 import atexit
 from pathlib import Path
@@ -219,22 +220,24 @@ class NNFunc:
             if key != 'return'
         ]
 
-        current_hash = hash(inspect.getsource(self.func))
+        current_hash = (
+            hashlib.md5(inspect.getsource(self.func).encode()).hexdigest()
+        )
         function_modified = True  # Only a stored hash can change this
+
         if self.info_file.exists():
             stored_hash = self.get_stored_func_info()['hash']
-            function_modified = current_hash == stored_hash
+            function_modified = current_hash != stored_hash
 
         if not function_modified:
             self.__model__ = load_model(self.nn_file)
         else:
-            print('FROM SCRATCH!')
+            self.nn_file.mkdir(exist_ok=True)
 
             with self.info_file.open('w') as file:
                 func_info = dict(hash=current_hash, certified=False)
                 json.dump(func_info, file, indent=4)
 
-            self.__pycache__.mkdir(exist_ok=True)
             num_input_nodes = NNDT.length_of(*self.arg_types)
             num_output_nodes = len(self.__return_type__)
             self.__model__ = self.create_model(
