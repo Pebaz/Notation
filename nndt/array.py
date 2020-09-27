@@ -1,5 +1,5 @@
 import random
-from . nndt import _Container, NNDTContainer
+from . nndt import NNDT, _Container, NNDTContainer
 
 
 # TODO(pebaz): Switch meaning of SHAPE and len()

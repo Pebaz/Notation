@@ -1,6 +1,7 @@
 """
 """
 
+import json
 import inspect
 import atexit
 from pathlib import Path
@@ -207,18 +208,39 @@ class NNFunc:
     """
     def __init__(self, func):
         self.validate_signature(func)
-
         self.use_prediction_only = False
-
         self.func = func
-
         self.__return_type__ = func.__annotations__['return']
-
         self.__pycache__ = Path('__pycache__')
-
         self.nn_file = self.__pycache__ / f'{func.__name__}'
+        self.info_file = self.nn_file / 'func_info.json'
+        self.arg_types = [
+            val for key, val in self.func.__annotations__.items()
+            if key != 'return'
+        ]
 
-        self.initialize_function()
+        current_hash = hash(inspect.getsource(self.func))
+        function_modified = True  # Only a stored hash can change this
+        if self.info_file.exists():
+            stored_hash = self.get_stored_func_info()['hash']
+            function_modified = current_hash == stored_hash
+
+        if not function_modified:
+            self.__model__ = load_model(self.nn_file)
+        else:
+            print('FROM SCRATCH!')
+
+            with self.info_file.open('w') as file:
+                func_info = dict(hash=current_hash, certified=False)
+                json.dump(func_info, file, indent=4)
+
+            self.__pycache__.mkdir(exist_ok=True)
+            num_input_nodes = NNDT.length_of(*self.arg_types)
+            num_output_nodes = len(self.__return_type__)
+            self.__model__ = self.create_model(
+                num_input_nodes, num_output_nodes
+            )
+            self.train()
 
         atexit.register(self.__cleanup__)
 
@@ -239,22 +261,9 @@ class NNFunc:
         model.compile(loss='mse', optimizer='adam')
         return model
 
-    def initialize_function(self):
-        self.arg_types = [
-            val for key, val in self.func.__annotations__.items()
-            if key != 'return'
-        ]
-
-        if self.nn_file.exists():
-            self.__model__ = load_model(self.nn_file)
-        else:
-            self.__pycache__.mkdir(exist_ok=True)
-            num_input_nodes = NNDT.length_of(*self.arg_types)
-            num_output_nodes = len(self.__return_type__)
-            self.__model__ = self.create_model(
-                num_input_nodes, num_output_nodes
-            )
-            self.train()
+    def get_stored_func_info(self):
+        "It is assumed that the info file exists. Handle error if not."
+        return json.load(self.info_file.open())
 
     def train(self, enthusiasm=10000):
         """
