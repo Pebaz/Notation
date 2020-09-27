@@ -39,6 +39,9 @@ class _Container(_CustomizableType):
 
     @staticmethod
     def customize(dict_, key):
+        assert hasattr(key, '__len__') and len(key) == 2, (
+            'Customizer should be NNDT[num_elements, type]'
+        )
         size, of_type = key
         dict_['SHAPE'] = size
         dict_['OF_TYPE'] = of_type
@@ -104,6 +107,18 @@ class NNDTType(type):
             bases,
             dict_
         )
+
+    def type_info(self):
+        """
+        This tuple is used for equivalence operations.
+        """
+        return self.__name__, self.SHAPE, len(self)
+
+    def __eq__(self, other):
+        """
+        One of the only ways to truly test comparison, unfortunately.
+        """
+        return str(self) == str(other)
 
     def __str__(self):
         return f'<{self.__name__}[{self.SHAPE}]>'
