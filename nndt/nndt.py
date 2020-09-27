@@ -61,6 +61,9 @@ class _Struct(_CustomizableType):
         Usage of NNDT.length_of() is correct since Structs act as one big unit.
         I.e. their shape is not different to the number of packed types.
         """
+        # Tuple[Int] rather than Tuple[Int,]
+        if not isinstance(nndt_types, tuple):
+            nndt_types = (nndt_types,)
         dict_['SHAPE'] = NNDT.length_of(*nndt_types)
         dict_['TYPES'] = nndt_types
 

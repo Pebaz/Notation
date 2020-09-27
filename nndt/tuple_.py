@@ -16,11 +16,18 @@ class Tuple(_Struct, NNDT):
         assert size <= self.SHAPE, f'Input array too large: {size}/{self.SHAPE}'
 
         self.value = []
-        for element, nndt_type in zip(value, self.TYPES):
-            if isinstance(element, NNDT):
-                self.value.append(element)  # Don't marshall, already done
-            else:  # It's a Python object, marshall it
-                self.value.append(nndt_type(element))
+        for i, (element, nndt_type) in enumerate(zip(value, self.TYPES)):
+            # It's a Python object, marshall it
+            if not isinstance(element, NNDT):
+                element = nndt_type(element)
+
+            # NOTE(pebaz): No subclass support since isinstance won't =(
+            assert element.__class__ == nndt_type, (
+                f'Expected element at index {i} to be of type {nndt_type}, got '
+                f'{element.__class__} instead'
+            )
+            self.value.append(element)
+
         self.value = tuple(self.value)
 
         complete_size = NNDT.length_of(*self.value)
@@ -37,30 +44,24 @@ class Tuple(_Struct, NNDT):
 
     @classmethod
     def from_layer(cls, layer):
-        """
-        Factory method to return a new String object from a given layer.
-
-        If a layer's value lies outside of the valid unicode sequence, it is
-        truncated to fit.
-
-        # TODO(pebaz): Should this only be true of repr() or str()?
-        Null characters '\0' are replaced with spaces for clarity.
-        """
+        """"""
         size = len(layer)
-        assert size == cls.SHAPE, f'Input layer too small: {size}/{cls.SHAPE}'
+        assert size == len(cls), f'Input layer too small: {size}/{len(cls)}'
 
-        chunk_size = len(cls.OF_TYPE)
         elements = []
-        for ptr in range(0, cls.COUNT * chunk_size, chunk_size):
+        ptr = 0
+        for nndt_type in self.TYPES:
+            chunk_size = len(nndt_type)
             node_slice = layer[ptr:ptr + chunk_size]
-            instance = cls.OF_TYPE.from_layer(node_slice)
+            instance = nndt_type.from_layer(node_slice)
             elements.append(instance)
+            ptr += chunk_size
 
         return cls(elements)
 
     @classmethod
     def random(cls):
-        return cls([cls.OF_TYPE.random() for _ in range(cls.COUNT)])
+        return cls([nndt_type.random() for nndt_type in cls.TYPES])
 
     def to(self):
         return [element.to() for element in self.value]
