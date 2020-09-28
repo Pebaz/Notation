@@ -138,6 +138,9 @@ class NNDTType(type):
         "Customize for types like Array to return total shape, not just count."
         return self.SHAPE
 
+    def __hash__(self):
+        return hash(str(self))
+
 
 class NNDT(metaclass=NNDTType):
     "Neural Network-Aware Data Type"
@@ -232,7 +235,7 @@ class NNFunc:
         if not function_modified:
             self.__model__ = load_model(self.nn_file)
         else:
-            self.nn_file.mkdir(exist_ok=True)
+            self.nn_file.mkdir(exist_ok=True, parents=True)
 
             with self.info_file.open('w') as file:
                 func_info = dict(hash=current_hash, certified=False)
@@ -280,7 +283,7 @@ class NNFunc:
             signature_layers = [
                 nndt_type.random() for nndt_type in self.arg_types
             ]
-            python_inputs.append([layer.value for layer in signature_layers])
+            python_inputs.append([layer.to() for layer in signature_layers])
 
             # Flatten the layer into one big layer and append it as an input
             data_inputs.append([
@@ -319,17 +322,41 @@ class NNFunc:
             marshalled_values.extend(nndt_type(arg).as_layer())
         return [marshalled_values]
 
+    def certify(self):
+        # TODO(pebaz): Load this value from a text file called: func.cerfity
+        self.use_prediction_only = True
+
+    # def __call__(self, *args):
+    #     "Call the function and the NN, returning the most accurate value."
+
+    #     result_accurate = self.func(*args)
+
+    #     input_values = self.signature_as_layer(args)
+    #     prediction = self.__model__.predict(input_values)
+    #     nndt_prediction = self.__return_type__.from_layer(prediction[0])
+    #     result_predict = nndt_prediction.to()
+    #     nndt_return_value = self.__return_type__(result_accurate)
+
+    #     self.__model__.fit(input_values, [nndt_return_value.as_layer()])
+
+    #     # If it matches, stop using the stored function!
+    #     if result_accurate == result_predict:
+    #         self.certify()
+    #     elif self.use_prediction_only:
+    #         return result_predict
+
+    #     return result_accurate
+
     def __call__(self, *args):
+        return self.call_predicted(*args)
+
+    def call_trained(self, *args):
         "Call the function and the NN, returning the most accurate value."
+        result_accurate = self.call_raw(*args)
+        result_predict = self.call_predicted(*args)
 
-        result_accurate = self.func(*args)
-
-        input_values = self.signature_as_layer(args)
-        prediction = self.__model__.predict(input_values)
-        nndt_prediction = self.__return_type__.from_layer(prediction[0])
-        result_predict = nndt_prediction.to()
+        # Train model using new input
         nndt_return_value = self.__return_type__(result_accurate)
-
         self.__model__.fit(input_values, [nndt_return_value.as_layer()])
 
         # If it matches, stop using the stored function!
@@ -340,21 +367,37 @@ class NNFunc:
 
         return result_accurate
 
-    def certify(self):
-        # TODO(pebaz): Load this value from a text file called: func.cerfity
-        self.use_prediction_only = True
-
     def call_raw(self, *args, **kwargs):
         "Bypass NN entirely."
         return self.func(*args, **kwargs)
 
     def call_predicted(self, *args):
         "Ensure use of NN's prediction."
-        tmp = self.use_prediction_only
-        self.use_prediction_only = True
-        result = self(*args)
-        self.use_prediction_only = tmp
-        return result
+        input_values = self.signature_as_layer(args)
+        prediction = self.__model__.predict(input_values)
+        nndt_prediction = self.__return_type__.from_layer(prediction[0])
+        return nndt_prediction.to()
+
+    def __getitem__(self, key):
+        # Allow for single arguments
+        if not isinstance(key, tuple):
+            key = (key,)
+        return self.call_raw(*key)
+        
+
+    # def call_raw(self, *args, **kwargs):
+    #     "Bypass NN entirely."
+    #     return self.func(*args, **kwargs)
+
+    # def call_predicted(self, *args):
+    #     "Ensure use of NN's prediction."
+    #     tmp = self.use_prediction_only
+    #     self.use_prediction_only = True
+    #     result = self(*args)
+    #     self.use_prediction_only = tmp
+    #     return result
+
+    
 
 
 nn = NNFunc

@@ -50,7 +50,7 @@ class Tuple(_Struct, NNDT):
 
         elements = []
         ptr = 0
-        for nndt_type in self.TYPES:
+        for nndt_type in cls.TYPES:
             chunk_size = len(nndt_type)
             node_slice = layer[ptr:ptr + chunk_size]
             instance = nndt_type.from_layer(node_slice)
@@ -64,7 +64,7 @@ class Tuple(_Struct, NNDT):
         return cls([nndt_type.random() for nndt_type in cls.TYPES])
 
     def to(self):
-        return [element.to() for element in self.value]
+        return tuple(element.to() for element in self.value)
 
 '''
 @struct  # Returns Tuple[Int, String[10]]
