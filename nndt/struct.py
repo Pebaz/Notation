@@ -2,6 +2,21 @@ from . nndt import NNDT, NNDTException
 from . tuple_ import Tuple
 
 class Struct(Tuple):
+    """
+    @struct
+    class Car:
+        name: String[10]
+        num_wheels: Int
+
+    car = Car(name='Honda', num_wheels=4)
+
+    print(car)
+
+    print(car.name, car.num_wheels)
+    print(car[0], car[1])
+
+    print([i for i in car])
+    """
     DISPLAY_NAME = 'Struct'
     FIELDS = {}
     
@@ -15,23 +30,18 @@ class Struct(Tuple):
             raise NNDTException('Struct constructor takes at least 1 argument.')
 
     def __getitem__(self, key):
-
-        # TODO(pebaz): Put these methods into Tuple so that you can
-        # just build a decorator from a class and return a Tuple
-
-        if isinstance(key, int):
-            return self.value[key]
-        else:
-            return self.__dict__[key]
+        return self.__dict__[tuple(self.FIELDS.keys())[key]]
 
     def __str__(self):
         return f'<{self.DISPLAY_NAME}[{self.SHAPE}] {repr(self.to())}>'
 
+
 def struct(class_):
+    """
+    Constructs new class with metadata to support dot operator attribute access.
+    """
     for nndt_type in class_.__annotations__.values():
         assert issubclass(nndt_type, NNDT), 'Struct fields must be NNDTs'
-
-    # HHHHHHHHHM what to do with names?
 
     result = Struct[tuple(class_.__annotations__.values())]
     result.FIELDS = class_.__annotations__

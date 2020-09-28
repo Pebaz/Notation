@@ -83,3 +83,8 @@ class Car:
 car = Car(name='Honda', num_wheels=4)
 
 print(car)
+
+print(car.name, car.num_wheels)
+print(car[0], car[1])
+
+print([i for i in car])
