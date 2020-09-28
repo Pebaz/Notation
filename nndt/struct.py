@@ -14,3 +14,12 @@ class Struct(Tuple):
             return self.value[key]
         else:
             return self.__dict__[key]
+
+
+def struct(class_):
+    for nndt_type in class_.__annotations__.values():
+        assert isinstance(nndt_type, NNDT), 'FOOOOOOOOOOOO'
+
+    # HHHHHHHHHM what to do with names?
+
+    return Struct[*class_.__annotations__.values()]
