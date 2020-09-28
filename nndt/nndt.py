@@ -363,7 +363,7 @@ class NNFunc:
     def __getitem__(self, key):
         # Allow for single arguments
         if not isinstance(key, tuple):
-            key = (key,)
+            key = [key]
         return self.call_raw(*key)
 
     

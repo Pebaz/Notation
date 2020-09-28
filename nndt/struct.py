@@ -22,4 +22,4 @@ def struct(class_):
 
     # HHHHHHHHHM what to do with names?
 
-    return Struct[*class_.__annotations__.values()]
+    #return Struct[*class_.__annotations__.values()]

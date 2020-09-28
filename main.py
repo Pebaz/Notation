@@ -8,7 +8,7 @@ def append(array: Array[1, Int], num: Int) -> Array[2, Int]:
 
 print()
 print('Result  ([1, 2]):', append[[1], 2])
-print('Predict ([1, 2]):', append.call_predicted([1], 2))
+print('Predict ([1, 2]):', append([1], 2))
 print()
 print('--------------------')
 
@@ -20,7 +20,7 @@ def negate(number: Int) -> Int:
 
 print()
 print('Result  (-123):', negate[123])
-print('Predict (-124):', negate.call_predicted(124))
+print('Predict (-124):', negate(124))
 print()
 print('--------------------')
 
@@ -31,7 +31,7 @@ def add(a: Int, b: Int) -> Int:
 
 print()
 print('Result  (300):', add[100, 200])
-print('Predict (15):', add.call_predicted(10, 5))
+print('Predict (15):', add(10, 5))
 print()
 print('--------------------')
 
@@ -43,7 +43,7 @@ def first_char(a: String) -> String[1]:
 
 print()
 print('Result  ("abc"):', repr(first_char['abc']))
-print('Predict ("bca"):', repr(first_char.call_predicted('bca')))
+print('Predict ("bca"):', repr(first_char('bca')))
 print()
 print('--------------------')
 
@@ -56,7 +56,7 @@ def concat(a: String[1], b: String[1]) -> String[2]:
 
 print()
 print('Result  ("a!"):', repr(concat['a', '!']))
-print('Predict ("bT"):', repr(concat.call_predicted('b', 'T')))
+print('Predict ("bT"):', repr(concat('b', 'T')))
 print()
 print('--------------------')
 
@@ -69,7 +69,7 @@ def normalize(tup: Tuple[Int, Int, Int]) -> Tuple[Float, Float, Float]:
     return x / length, y / length, z / length
 
 print()
-print('Result  (1, 0, 1):', normalize[((1, 0, 1),)])
+print('Result  (1, 0, 1):', normalize[[1, 0, 1]])
 print('Predict (1, 0, 1):', normalize((1, 0, 1)))
 print()
 print('--------------------')
