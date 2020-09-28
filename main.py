@@ -76,15 +76,21 @@ from nndt import *
 
 
 @struct
-class Car:
-    name: String[10]
-    num_wheels: Int
+class Vec3:
+    x: Float
+    y: Float
+    z: Float
 
-car = Car(name='Honda', num_wheels=4)
 
-print(car)
+@nn
+def normalize_vec(tup: Vec3) -> Tuple[Float, Float, Float]:
+    x, y, z = tup
+    length = math.sqrt(x ** 2 + y ** 2 + z ** 2)
+    return x / length, y / length, z / length
 
-print(car.name, car.num_wheels)
-print(car[0], car[1])
 
-print([i for i in car])
+print()
+print('Result  (1, 0, 1):', normalize_vec[Vec3(1, 0, 1)])
+print('Predict (1, 0, 1):', normalize_vec(Vec3(1, 0, 1)))
+print()
+print('--------------------')

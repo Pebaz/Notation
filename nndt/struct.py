@@ -23,6 +23,9 @@ class Struct(Tuple):
     def __init__(self, *args, **kwargs):
         if args:
             Tuple.__init__(self, args)
+            self.__dict__.update({
+                key : val for key, val in zip(self.FIELDS.keys(), args)
+            })
         elif kwargs:
             Tuple.__init__(self, tuple(kwargs.values()))
             self.__dict__.update(kwargs)
