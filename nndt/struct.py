@@ -20,11 +20,11 @@ class Struct(Tuple):
     DISPLAY_NAME = 'Struct'
     FIELDS = {}
     
-    def __init__(self, *args, **kwargs):
-        if args:
-            Tuple.__init__(self, args)
+    def __init__(self, tuple_args=None, **kwargs):
+        if tuple_args:
+            Tuple.__init__(self, tuple_args)
             self.__dict__.update({
-                key : val for key, val in zip(self.FIELDS.keys(), args)
+                key : val for key, val in zip(self.FIELDS.keys(), tuple_args)
             })
         elif kwargs:
             Tuple.__init__(self, tuple(kwargs.values()))

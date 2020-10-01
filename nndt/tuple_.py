@@ -61,7 +61,7 @@ class Tuple(_Struct, NNDT):
 
     @classmethod
     def random(cls):
-        return cls([nndt_type.random() for nndt_type in cls.TYPES])
+        return cls([nndt_type.random().to() for nndt_type in cls.TYPES])
 
     def to(self):
         return tuple(element.to() for element in self.value)
