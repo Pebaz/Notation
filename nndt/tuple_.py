@@ -1,3 +1,8 @@
+raise NotImplementedError('''
+    Module is not yet ready for use. Some features may work while others are
+    entirely broken.
+''')
+
 import random
 from . nndt import NNDT, _Struct
 

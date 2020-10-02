@@ -94,3 +94,21 @@ print('Result  (1, 0, 1):', normalize_vec[Vec3(x=1, y=0, z=1)])
 print('Predict (1, 0, 1):', normalize_vec(Vec3([1, 0, 1])))
 print()
 print('--------------------')
+
+
+
+
+
+
+
+
+
+# TODO(pebaz): Array[3, Int].random() doesn't work when typed into ipython :/
+
+
+
+
+
+
+
+
