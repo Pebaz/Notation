@@ -1,4 +1,4 @@
-
+from nndt import Array, String
 
 
 Array[3, String[3]](['ABC', '10', '!']).to()

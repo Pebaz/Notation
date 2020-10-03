@@ -18,9 +18,9 @@ class Array(_Container, NNDTContainer):
                 self.value.append(self.OF_TYPE(element))
 
         complete_size = NNDT.length_of(*self.value)
-        assert complete_size <= self.SHAPE, (
+        assert complete_size <= len(self), (
             f'Input elements marshalled into a size greater than the array can '
-            f'store: {complete_size}/{self.SHAPE}'
+            f'store: {complete_size}/{len(self)}'
         )
 
     def as_layer(self):
@@ -41,7 +41,7 @@ class Array(_Container, NNDTContainer):
         Null characters '\0' are replaced with spaces for clarity.
         """
         size = len(layer)
-        assert size == cls.SHAPE, f'Input layer too small: {size}/{cls.SHAPE}'
+        assert size == len(cls), f'Input layer too small: {size}/{len(cls)}'
 
         chunk_size = len(cls.OF_TYPE)
         elements = []
