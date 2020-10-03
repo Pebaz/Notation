@@ -1,11 +1,9 @@
 import random
 import pytest
-from nndt import Array, String, Int, Float
+from nndt import *
 
 
 def test_array_constructor():
-    # index[]
-    # different types using []
     assert Array
     assert Array[1, Int]
     assert Array[1, Float]
@@ -143,4 +141,11 @@ def test_array_type():
     assert len(Array[1, Array[1, Int]]) == 1
 
 def test_array_nn():
-    pass
+    @nn
+    def append(array: Array[1, Int], num: Int) -> Array[2, Int]:
+        return array + [num]
+
+    assert append[[1], 2] == [1, 2]
+    result = append([1], 2)
+    assert 1 in result or 2 in result, 'Prediction was *way* off'
+

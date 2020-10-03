@@ -276,7 +276,7 @@ class NNFunc:
         "It is assumed that the info file exists. Handle error if not."
         return json.load(self.info_file.open())
 
-    def train(self, enthusiasm=10000):
+    def train(self, enthusiasm=100_000):
         """
         Automatically trains the NN using random inputs coupled with the correct
         return value obtained from the function.
