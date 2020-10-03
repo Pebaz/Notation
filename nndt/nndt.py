@@ -184,7 +184,7 @@ class NNDTContainerType(NNDTType):
     Exists purely so len() and str() methods can be called on container types.
     """
     def __str__(self):
-        of_type = str(self.OF_TYPE)[1:-1]
+        of_type = str(self.OF_TYPE or '<None>')[1:-1]
         return f'<{self.__name__}[{self.SHAPE}, {of_type}]>'
 
     def __len__(self):

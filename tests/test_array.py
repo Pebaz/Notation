@@ -98,26 +98,49 @@ def test_array_from_layer():
 
 
 def test_array_random():
-    assert Array[3, Int].random()
-    assert Array[3, Float].random()
-    assert Array[3, String[3]].random()
-    assert Array[100, Int].random()
-    assert Array[random.randint(1, 1000), Int].random()
-    assert Array[random.randint(1, 1000), Float].random()
-    assert Array[random.randint(1, 1000), String[1]].random()
-    assert Array[
-        random.randint(1, 1000), random.choice([Int, Float, String[1]])
-    ].random()
+    assert isinstance(Array[3, Int].random().to(), list)
+    assert isinstance(Array[3, Float].random().to(), list)
+    assert isinstance(Array[3, String[3]].random().to(), list)
+    assert isinstance(Array[100, Int].random().to(), list)
+    assert isinstance(Array[random.randint(1, 1000), Int].random().to(), list)
+    assert isinstance(Array[random.randint(1, 1000), Float].random().to(), list)
+    assert isinstance(
+        Array[random.randint(1, 1000), String[1]].random().to(), list
+    )
+    assert isinstance(
+        Array[
+            random.randint(1, 1000), random.choice([Int, Float, String[1]])
+        ].random().to(), list
+    )
 
 
 
 def test_array_type():
-    # str()
-    # repr()
-    # format()
-    # len()
-    pass
+    assert str(Array) == '<Array[1, None]>'
+    assert str(Array[1, Int]) == '<Array[1, Int[1]]>'
+    assert str(Array[1, Float]) == '<Array[1, Float[1]]>'
+    assert str(Array[1, String[1]]) == '<Array[1, String[1]]>'
+    assert str(Array[1, Array[1, Int]]) == '<Array[1, Array[1, Int[1]]]>'
 
+    assert repr(Array) == '<Array[1, None]>'
+    assert repr(Array[1, Int]) == '<Array[1, Int[1]]>'
+    assert repr(Array[1, Float]) == '<Array[1, Float[1]]>'
+    assert repr(Array[1, String[1]]) == '<Array[1, String[1]]>'
+    assert repr(Array[1, Array[1, Int]]) == '<Array[1, Array[1, Int[1]]]>'
+
+    with pytest.raises(TypeError):
+        # TODO(pebaz): Won't let me step into TypeError here in debugger. Why?
+        assert f'{Array}' == '<Array[1, None]>'
+        assert f'{Array[1, Int]}' == '<Array[1, Int[1]]>'
+        assert f'{Array[1, Float]}' == '<Array[1, Float[1]]>'
+        assert f'{Array[1, String[1]]}' == '<Array[1, String[1]]>'
+        assert f'{Array[1, Array[1, Int]]}' == '<Array[1, Array[1, Int[1]]]>'
+
+    assert len(Array) == 1
+    assert len(Array[1, Int]) == 1
+    assert len(Array[1, Float]) == 1
+    assert len(Array[1, String[1]]) == 1
+    assert len(Array[1, Array[1, Int]]) == 1
 
 def test_array_nn():
     pass
