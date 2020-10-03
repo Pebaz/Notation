@@ -200,6 +200,8 @@ class NNDTContainer(NNDT, metaclass=NNDTContainerType):
     NNDT          <-metaclass-> NNDTType
     NNDTContainer <-metaclass-> NNDTContainerType
     """
+    OF_TYPE = None
+    COUNT = 0
 
 
 class NNFunc:
