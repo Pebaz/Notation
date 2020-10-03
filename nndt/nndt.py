@@ -183,13 +183,12 @@ class NNDTContainerType(NNDTType):
     """
     Exists purely so len() and str() methods can be called on container types.
     """
-    def __len__(self):
-        print('*' * 100)
-        return self.SHAPE * len(self.OF_TYPE)
-
     def __str__(self):
         of_type = str(self.OF_TYPE)[1:-1]
         return f'<{self.__name__}[{self.SHAPE}, {of_type}]>'
+
+    def __len__(self):
+        return (self.SHAPE * len(self.OF_TYPE or [])) or 1
 
 
 class NNDTContainer(NNDT, metaclass=NNDTContainerType):
@@ -205,8 +204,7 @@ class NNDTContainer(NNDT, metaclass=NNDTContainerType):
     COUNT = 0
 
     def __len__(self):
-        print('+' * 100)
-        return self.SHAPE * len(self.OF_TYPE)
+        return self.SHAPE * len(self.OF_TYPE or [])
 
 
 class NNFunc:
