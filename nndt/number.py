@@ -37,10 +37,7 @@ class Float(NNDT):
 
     @staticmethod
     def random():
-        return Float(random.uniform(
-            -340282346638528859811704183484516925440.0,
-            340282346638528859811704183484516925440.0
-        ))
+        return Float(random.uniform(-2147483648.0, 2147483647.0))
 
     def as_layer(self):
         return [self.value]
