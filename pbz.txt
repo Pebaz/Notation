@@ -1,0 +1,5 @@
+10/8/2020
+
+The compress.py file is related to MLLockBox:
+
+https://github.com/johntheprogrammer92/mllockbox
