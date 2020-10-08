@@ -32,7 +32,7 @@ def test_nn_ints():
 
     assert add[100, 200] == 300
     a, b = add(8000, 11), 8011
-    assert almost_equal(a, b), f'Not even close: {a} != {b}'
+    assert 7900 < a < 8100, f'Not even close: {a} != {b}'
 
 
 def test_nn_strings():

@@ -1,1 +1,1 @@
-cls; pytest --disable-pytest-warnings -s
+cls; pytest --disable-pytest-warnings -s @arg
