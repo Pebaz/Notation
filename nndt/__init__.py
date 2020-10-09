@@ -2,6 +2,7 @@ from . nndt import *
 from . string import String
 from . number import Int, Float
 from . array import Array
+from . boolean import Bool, TRUE, FALSE
 
 
 # TODO(pebaz): Fix up these modules since they would be cool NNDTs to have.

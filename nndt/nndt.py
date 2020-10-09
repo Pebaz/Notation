@@ -242,7 +242,22 @@ class NNFunc:
             function_modified = current_hash != stored_hash
 
         if not function_modified:
-            self.__model__ = load_model(self.nn_file)
+            try:
+                self.__model__ = load_model(self.nn_file)
+            except OSError:
+                self.nn_file.mkdir(exist_ok=True, parents=True)
+
+                with self.info_file.open('w') as file:
+                    func_info = dict(hash=current_hash, certified=False)
+                    json.dump(func_info, file, indent=4)
+
+                num_input_nodes = NNDT.length_of(*self.arg_types)
+                num_output_nodes = len(self.__return_type__)
+                self.__model__ = self.create_model(
+                    num_input_nodes, num_output_nodes
+                )
+                self.train()
+                
         else:
             self.nn_file.mkdir(exist_ok=True, parents=True)
 
